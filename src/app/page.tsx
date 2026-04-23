@@ -239,6 +239,7 @@ export default function Home() {
   const [verses, setVerses] = useState<string[]>([]);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [showBookPicker, setShowBookPicker] = useState(false);
+  const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [testament, setTestament] = useState<"old" | "new">("old");
   const [activeTab, setActiveTab] = useState("bible");
   const [showCompare, setShowCompare] = useState(false);
@@ -250,6 +251,9 @@ export default function Home() {
   const amharicScrollRef = useRef<HTMLDivElement>(null);
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
 
   const otBooks = amharicBooks.slice(0, 39);
   const ntBooks = amharicBooks.slice(39);
@@ -293,6 +297,8 @@ export default function Home() {
   }, [selectedBook, chapter, englishVersion]);
 
   useEffect(() => {
+    if (translationView !== "both") return;
+    
     const amharicEl = amharicScrollRef.current;
     const englishEl = englishScrollRef.current;
 
@@ -300,17 +306,25 @@ export default function Home() {
 
     const handleAmharicScroll = () => {
       if (isScrolling.current) return;
+      const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
+      const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
+      if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
+      
       isScrolling.current = true;
-      const scrollRatio = amharicEl.scrollTop / (amharicEl.scrollHeight - amharicEl.clientHeight);
-      englishEl.scrollTop = scrollRatio * (englishEl.scrollHeight - englishEl.clientHeight);
+      const scrollRatio = amharicEl.scrollTop / amharicMaxScroll;
+      englishEl.scrollTop = scrollRatio * englishMaxScroll;
       setTimeout(() => { isScrolling.current = false; }, 50);
     };
 
     const handleEnglishScroll = () => {
       if (isScrolling.current) return;
+      const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
+      const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
+      if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
+      
       isScrolling.current = true;
-      const scrollRatio = englishEl.scrollTop / (englishEl.scrollHeight - englishEl.clientHeight);
-      amharicEl.scrollTop = scrollRatio * (amharicEl.scrollHeight - amharicEl.clientHeight);
+      const scrollRatio = englishEl.scrollTop / englishMaxScroll;
+      amharicEl.scrollTop = scrollRatio * amharicMaxScroll;
       setTimeout(() => { isScrolling.current = false; }, 50);
     };
 
@@ -321,7 +335,7 @@ export default function Home() {
       amharicEl.removeEventListener("scroll", handleAmharicScroll);
       englishEl.removeEventListener("scroll", handleEnglishScroll);
     };
-  }, [translationView]);
+  }, [translationView, verses, englishVerses]);
 
   const handlePrevChapter = () => {
     if (chapter > 1) {
@@ -617,8 +631,31 @@ export default function Home() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowBookPicker(false)}
           />
-          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up">
-            <div className="flex justify-center pt-3 pb-1">
+          <div 
+            ref={sheetRef}
+            className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up"
+          >
+            <div 
+              className="flex justify-center pt-3 pb-1"
+              onTouchStart={(e) => {
+                touchStartY.current = e.touches[0].clientY;
+              }}
+              onTouchMove={(e) => {
+                touchCurrentY.current = e.touches[0].clientY;
+                const deltaY = touchCurrentY.current - touchStartY.current;
+                if (deltaY > 0) {
+                  sheetRef.current!.style.transform = `translateY(${deltaY}px)`;
+                }
+              }}
+              onTouchEnd={(e) => {
+                const deltaY = touchCurrentY.current - touchStartY.current;
+                if (deltaY > 100) {
+                  setShowBookPicker(false);
+                } else {
+                  sheetRef.current!.style.transform = '';
+                }
+              }}
+            >
               <div className="w-9 h-1.25 bg-white/20 rounded-full" />
             </div>
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
@@ -651,8 +688,7 @@ export default function Home() {
                     key={book.file}
                     onClick={() => {
                       setSelectedBook(book);
-                      setChapter(1);
-                      setShowBookPicker(false);
+                      setShowChapterPicker(true);
                     }}
                     className={`p-3 rounded-lg text-left transition-colors ${selectedBook.name === book.name ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
                   >
@@ -662,6 +698,52 @@ export default function Home() {
                     <div className="text-[13px] opacity-70">
                       {book.chapters} ክፍሎች
                     </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chapter Picker */}
+      {showChapterPicker && selectedBook && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowChapterPicker(false)}
+          />
+          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <button
+                onClick={() => setShowChapterPicker(false)}
+                className="text-[#0a84ff] text-[17px] font-medium"
+              >
+                Back
+              </button>
+              <h2 className="text-white text-[17px] font-semibold">
+                {selectedBook.amharic}
+              </h2>
+              <button
+                onClick={() => setShowChapterPicker(false)}
+                className="text-[#0a84ff] text-[17px] font-medium"
+              >
+                Done
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((ch) => (
+                  <button
+                    key={ch}
+                    onClick={() => {
+                      setChapter(ch);
+                      setShowChapterPicker(false);
+                      setShowBookPicker(false);
+                    }}
+                    className={`p-3 rounded-lg text-center transition-colors ${chapter === ch ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
+                  >
+                    <div className="text-[15px] font-medium">{ch}</div>
                   </button>
                 ))}
               </div>
