@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   BookOpen,
@@ -242,13 +242,20 @@ export default function Home() {
   const [testament, setTestament] = useState<"old" | "new">("old");
   const [activeTab, setActiveTab] = useState("bible");
   const [showCompare, setShowCompare] = useState(false);
+  const [englishVersion, setEnglishVersion] = useState<"kjv" | "web">("web");
+  const [englishVerses, setEnglishVerses] = useState<string[]>([]);
+  const [showEnglish, setShowEnglish] = useState(false);
+  const [translationView, setTranslationView] = useState<"amharic" | "english" | "both">("amharic");
   const [loading, setLoading] = useState(true);
+  const amharicScrollRef = useRef<HTMLDivElement>(null);
+  const englishScrollRef = useRef<HTMLDivElement>(null);
+  const isScrolling = useRef(false);
 
   const otBooks = amharicBooks.slice(0, 39);
   const ntBooks = amharicBooks.slice(39);
   const filteredBooks = testament === "old" ? otBooks : ntBooks;
 
-  // Load Amharic chapter when book or chapter changes
+  // Load Amharic and English chapters when book or chapter changes
   useEffect(() => {
     async function loadChapter() {
       setLoading(true);
@@ -256,24 +263,65 @@ export default function Home() {
         const bookIndex = amharicBooks.findIndex(
           (b) => b.name === selectedBook.name,
         );
-        const response = await fetch(`/data/amharic/${bookIndex + 1}.json`);
-        const data = await response.json();
-        const chapterData = data.chapters.find(
+        
+        // Load Amharic
+        const amharicResponse = await fetch(`/data/amharic/${bookIndex + 1}.json`);
+        const amharicData = await amharicResponse.json();
+        const amharicChapter = amharicData.chapters.find(
           (c: any) => c.chapter === chapter.toString(),
         );
-        setVerses(chapterData?.verses || []);
-        console.log(
-          `Loaded ${selectedBook.amharic} Chapter ${chapter}:`,
-          chapterData,
-        );
+        setVerses(amharicChapter?.verses || []);
+        
+        // Load English
+        const englishResponse = await fetch(`/data/english/${englishVersion}/${bookIndex + 1}.json`);
+        if (englishResponse.ok) {
+          const englishData = await englishResponse.json();
+          const englishChapter = englishData.text?.[chapter - 1];
+          const englishVerseTexts = englishChapter?.text?.map((v: any) => v.text || "") || [];
+          setEnglishVerses(englishVerseTexts);
+        } else {
+          setEnglishVerses([]);
+        }
       } catch (error) {
         console.error("Error loading chapter:", error);
         setVerses([]);
+        setEnglishVerses([]);
       }
       setLoading(false);
     }
     loadChapter();
-  }, [selectedBook, chapter]);
+  }, [selectedBook, chapter, englishVersion]);
+
+  useEffect(() => {
+    const amharicEl = amharicScrollRef.current;
+    const englishEl = englishScrollRef.current;
+
+    if (!amharicEl || !englishEl) return;
+
+    const handleAmharicScroll = () => {
+      if (isScrolling.current) return;
+      isScrolling.current = true;
+      const scrollRatio = amharicEl.scrollTop / (amharicEl.scrollHeight - amharicEl.clientHeight);
+      englishEl.scrollTop = scrollRatio * (englishEl.scrollHeight - englishEl.clientHeight);
+      setTimeout(() => { isScrolling.current = false; }, 50);
+    };
+
+    const handleEnglishScroll = () => {
+      if (isScrolling.current) return;
+      isScrolling.current = true;
+      const scrollRatio = englishEl.scrollTop / (englishEl.scrollHeight - englishEl.clientHeight);
+      amharicEl.scrollTop = scrollRatio * (amharicEl.scrollHeight - amharicEl.clientHeight);
+      setTimeout(() => { isScrolling.current = false; }, 50);
+    };
+
+    amharicEl.addEventListener("scroll", handleAmharicScroll);
+    englishEl.addEventListener("scroll", handleEnglishScroll);
+
+    return () => {
+      amharicEl.removeEventListener("scroll", handleAmharicScroll);
+      englishEl.removeEventListener("scroll", handleEnglishScroll);
+    };
+  }, [translationView]);
 
   const handlePrevChapter = () => {
     if (chapter > 1) {
@@ -313,9 +361,29 @@ export default function Home() {
           <ChevronDown className="w-4 h-4 text-white/60" />
         </button>
         <div className="flex items-center gap-1">
-          <button onClick={() => setShowCompare(true)} className="p-2">
-            <Languages className="w-[22px] h-[22px] text-white/80" />
-          </button>
+          <div className="flex items-center gap-1 bg-[#2c2c2e] rounded-lg p-1">
+            <button 
+              onClick={() => setTranslationView("amharic")}
+              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "amharic" ? 'bg-[#0a84ff] text-white' : 'text-white/70'}`}
+            >
+              አማ
+            </button>
+            <button 
+              onClick={() => setTranslationView("both")}
+              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "both" ? 'bg-[#0a84ff] text-white' : 'text-white/70'}`}
+            >
+              አማ+ENG
+            </button>
+            <button 
+              onClick={() => {
+                setTranslationView("english");
+                setShowEnglish(true);
+              }}
+              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "english" ? 'bg-[#0a84ff] text-white' : 'text-white/70'}`}
+            >
+              ENG
+            </button>
+          </div>
           <button className="p-2">
             <Search className="w-[22px] h-[22px] text-white/80" />
           </button>
@@ -350,52 +418,152 @@ export default function Home() {
             <span className="text-white/50">Loading...</span>
           </div>
         ) : (
-          <div className="space-y-1">
-            {verses.map((verse, index) => (
-              <div
-                key={index + 1}
-                onClick={() =>
-                  setSelectedVerse(
-                    selectedVerse === index + 1 ? null : index + 1,
-                  )
-                }
-                className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
-              >
-                <div className="flex gap-3">
-                  <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
-                    {verse === "" && index < verses.length - 1 && verses[index + 1] !== "" 
-                      ? `${index + 1}-${index + 2}` 
-                      : index + 1}
-                  </span>
-                  <p className="text-[#f5f5f7] text-[18px] leading-[1.6] flex-1">
-                    {verse === "" && index < verses.length - 1 ? verses[index + 1] : verse}
-                  </p>
-                </div>
-                {selectedVerse === index + 1 && (
-                  <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
-                    >
-                      <Highlighter className="w-4 h-4" />
-                      Highlight
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="flex-1 py-2.5 bg-[#0a84ff] text-white text-[15px] rounded-full font-medium active:bg-[#007aff] flex items-center justify-center gap-2"
-                    >
-                      <Bookmark className="w-4 h-4" />
-                      Bookmark
-                    </button>
+          <>
+            {translationView === "amharic" ? (
+              <div className="space-y-1">
+                {verses.map((verse, index) => (
+                  <div
+                    key={index + 1}
+                    onClick={() =>
+                      setSelectedVerse(
+                        selectedVerse === index + 1 ? null : index + 1,
+                      )
+                    }
+                    className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
+                  >
+                    <div className="flex gap-3">
+                      <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
+                        {verse === "" && index < verses.length - 1 && verses[index + 1] !== "" 
+                          ? `${index + 1}-${index + 2}` 
+                          : index + 1}
+                      </span>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-[#f5f5f7] text-[18px] leading-[1.6]">
+                          {verse === "" && index < verses.length - 1 ? verses[index + 1] : verse}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedVerse === index + 1 && (
+                      <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                        >
+                          <Highlighter className="w-4 h-4" />
+                          Highlight
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="flex-1 py-2.5 bg-[#0a84ff] text-white text-[15px] rounded-full font-medium active:bg-[#007aff] flex items-center justify-center gap-2"
+                        >
+                          <Bookmark className="w-4 h-4" />
+                          Bookmark
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
+            ) : translationView === "both" ? (
+              <div className="flex flex-col h-full">
+                <div ref={amharicScrollRef} className="flex-1 overflow-y-auto border-b border-white/10">
+                  <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
+                    አማርኛ
+                  </div>
+                  <div className="space-y-1">
+                    {verses.map((verse, index) => (
+                      <div
+                        key={index + 1}
+                        onClick={() =>
+                          setSelectedVerse(
+                            selectedVerse === index + 1 ? null : index + 1,
+                          )
+                        }
+                        className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
+                      >
+                        <div className="flex gap-3">
+                          <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
+                            {verse === "" && index < verses.length - 1 && verses[index + 1] !== "" 
+                              ? `${index + 1}-${index + 2}` 
+                              : index + 1}
+                          </span>
+                          <p className="text-[#f5f5f7] text-[18px] leading-[1.6]">
+                            {verse === "" && index < verses.length - 1 ? verses[index + 1] : verse}
+                          </p>
+                        </div>
+                        {selectedVerse === index + 1 && (
+                          <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                            >
+                              <Highlighter className="w-4 h-4" />
+                              Highlight
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="flex-1 py-2.5 bg-[#0a84ff] text-white text-[15px] rounded-full font-medium active:bg-[#007aff] flex items-center justify-center gap-2"
+                            >
+                              <Bookmark className="w-4 h-4" />
+                              Bookmark
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div ref={englishScrollRef} className="flex-1 overflow-y-auto">
+                  <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
+                    English ({englishVersion.toUpperCase()})
+                  </div>
+                  <div className="space-y-1">
+                    {englishVerses.map((verse, index) => (
+                      <div
+                        key={index + 1}
+                        className="py-3 px-2 rounded-[10px] active:bg-[#2c2c2e]/50"
+                      >
+                        <div className="flex gap-3">
+                          <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
+                            {index + 1}
+                          </span>
+                          <p className="text-[#f5f5f7] text-[16px] leading-[1.5]">
+                            {verse}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {englishVerses.map((verse, index) => (
+                  <div
+                    key={index + 1}
+                    className="py-3 px-2 rounded-[10px] active:bg-[#2c2c2e]/50"
+                  >
+                    <div className="flex gap-3">
+                      <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <p className="text-[#f5f5f7] text-[16px] leading-[1.5]">
+                        {verse}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
