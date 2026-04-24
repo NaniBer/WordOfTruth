@@ -248,12 +248,92 @@ export default function Home() {
   const [showEnglish, setShowEnglish] = useState(false);
   const [translationView, setTranslationView] = useState<"amharic" | "english" | "both">("amharic");
   const [loading, setLoading] = useState(true);
+  const [bookmarks, setBookmarks] = useState<any[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem("bible-bookmarks");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [highlights, setHighlights] = useState<Record<string, string>>(() => {
+    if (typeof window === 'undefined') return {};
+    const saved = localStorage.getItem("bible-highlights");
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const amharicScrollRef = useRef<HTMLDivElement>(null);
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
   const touchCurrentY = useRef(0);
+
+  const highlightColors = ["#ffeb3b", "#4caf50", "#2196f3", "#e91e63", "#9c27b0"];
+
+  
+
+  const saveBookmark = () => {
+    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${selectedVerse}`;
+    if (isBookmarked(selectedVerse)) {
+      removeBookmark(id);
+    } else {
+      const bookmark = {
+        id,
+        bookName: selectedBook.name,
+        bookAmharic: selectedBook.amharic,
+        chapter,
+        verse: selectedVerse,
+        amharic: verses[selectedVerse - 1] || "",
+        english: englishVerses[selectedVerse - 1] || "",
+        timestamp: Date.now(),
+      };
+      const updated = [...bookmarks, bookmark];
+      setBookmarks(updated);
+      localStorage.setItem("bible-bookmarks", JSON.stringify(updated));
+    }
+  };
+
+  const removeBookmark = (id: string) => {
+    const updated = bookmarks.filter(b => b.id !== id);
+    setBookmarks(updated);
+    localStorage.setItem("bible-bookmarks", JSON.stringify(updated));
+  };
+
+  const isBookmarked = (verseNum: number) => {
+    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${verseNum}`;
+    return bookmarks.some(b => b.id === id);
+  };
+
+  const saveHighlight = (color: string | null) => {
+    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${selectedVerse}`;
+    if (color === null) {
+      const { [id]: removed, ...rest } = highlights;
+      setHighlights(rest);
+      localStorage.setItem("bible-highlights", JSON.stringify(rest));
+      removeBookmark(id);
+    } else {
+      const updated = { ...highlights, [id]: color };
+      setHighlights(updated);
+      localStorage.setItem("bible-highlights", JSON.stringify(updated));
+      const bookmark = {
+        id,
+        bookName: selectedBook.name,
+        bookAmharic: selectedBook.amharic,
+        chapter,
+        verse: selectedVerse,
+        amharic: verses[selectedVerse - 1] || "",
+        english: englishVerses[selectedVerse - 1] || "",
+        timestamp: Date.now(),
+      };
+      const updatedBookmarks = [...bookmarks.filter(b => b.id !== id), bookmark];
+      setBookmarks(updatedBookmarks);
+      localStorage.setItem("bible-bookmarks", JSON.stringify(updatedBookmarks));
+    }
+    setShowColorPicker(false);
+  };
+
+  const getHighlight = (verseNum: number) => {
+    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${verseNum}`;
+    return highlights[id] || null;
+  };
 
   const otBooks = amharicBooks.slice(0, 39);
   const ntBooks = amharicBooks.slice(39);
@@ -426,10 +506,61 @@ export default function Home() {
       </div>
 
       {/* Bible Content - Amharic Only */}
-      <main className="flex-1 overflow-y-auto px-4 py-2">
+      <main className="flex-1 overflow-y-auto px-4">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <span className="text-white/50">Loading...</span>
+          </div>
+        ) : activeTab === "saved" ? (
+          <div className="py-2">
+            <div className="text-white/60 text-[15px] font-medium px-2 py-3">
+              Saved Verses ({bookmarks.length})
+            </div>
+            {bookmarks.length === 0 ? (
+              <div className="text-white/50 text-center py-8">
+                No saved verses yet. Tap a verse and bookmark it!
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {bookmarks.sort((a, b) => a.timestamp - b.timestamp).map((bookmark) => (
+                  <button
+                    key={bookmark.id}
+                    onClick={() => {
+                      const book = amharicBooks.find(b => b.name === bookmark.bookName);
+                      if (book) {
+                        setSelectedBook(book);
+                        setChapter(bookmark.chapter);
+                        setActiveTab("bible");
+                      }
+                    }}
+                    className="w-full text-left p-3 rounded-lg bg-[#2c2c2e] active:bg-[#3a3a3c]"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[#0a84ff] text-[14px] font-medium">
+                        {bookmark.bookAmharic} {bookmark.chapter}:{bookmark.verse}
+                      </span>
+                    </div>
+                    <p className="text-white/80 text-[15px] leading-[1.4] line-clamp-2">
+                      {bookmark.amharic}
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-white/50 text-[13px]">
+                        {bookmark.english}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeBookmark(bookmark.id);
+                        }}
+                        className="text-[#ff453a] text-[13px] px-2 py-1 rounded bg-white/10"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -452,7 +583,10 @@ export default function Home() {
                           : index + 1}
                       </span>
                       <div className="flex-1 space-y-1">
-                        <p className="text-[#f5f5f7] text-[18px] leading-[1.6]">
+                        <p 
+                          className="text-[#f5f5f7] text-[18px] leading-[1.6] rounded px-1"
+                          style={{ backgroundColor: getHighlight(index + 1) || undefined }}
+                        >
                           {verse === "" && index < verses.length - 1 ? verses[index + 1] : verse}
                         </p>
                       </div>
@@ -462,21 +596,28 @@ export default function Home() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            setShowColorPicker(!showColorPicker);
                           }}
-                          className="flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                          className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? 'border-2 border-[#ffeb3b]' : ''}`}
                         >
                           <Highlighter className="w-4 h-4" />
-                          Highlight
+                          {getHighlight(index + 1) ? 'Highlighted' : 'Highlight'}
                         </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          className="flex-1 py-2.5 bg-[#0a84ff] text-white text-[15px] rounded-full font-medium active:bg-[#007aff] flex items-center justify-center gap-2"
-                        >
-                          <Bookmark className="w-4 h-4" />
-                          Bookmark
-                        </button>
+                        {showColorPicker && selectedVerse === index + 1 && (
+                          <div className="flex gap-2 mt-2 pb-2">
+                            {highlightColors.map((color) => (
+                              <button
+                                key={color}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveHighlight(color);
+                                }}
+                                className="w-8 h-8 rounded-full border-2 border-white/30"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -497,6 +638,7 @@ export default function Home() {
                             selectedVerse === index + 1 ? null : index + 1,
                           )
                         }
+                        style={{ backgroundColor: getHighlight(index + 1) ? `${getHighlight(index + 1)}40` : undefined }}
                         className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
                       >
                         <div className="flex gap-3">
@@ -505,7 +647,10 @@ export default function Home() {
                               ? `${index + 1}-${index + 2}` 
                               : index + 1}
                           </span>
-                          <p className="text-[#f5f5f7] text-[18px] leading-[1.6]">
+                          <p 
+                            className="text-[#f5f5f7] text-[18px] leading-[1.6] rounded px-1"
+                            style={{ backgroundColor: getHighlight(index + 1) || undefined }}
+                          >
                             {verse === "" && index < verses.length - 1 ? verses[index + 1] : verse}
                           </p>
                         </div>
@@ -514,21 +659,32 @@ export default function Home() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (getHighlight(index + 1)) {
+                                  saveHighlight(null);
+                                } else {
+                                  setShowColorPicker(!showColorPicker);
+                                }
                               }}
-                              className="flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                              className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? 'border-2 border-[#ffeb3b]' : ''}`}
                             >
                               <Highlighter className="w-4 h-4" />
-                              Highlight
+                              {getHighlight(index + 1) ? 'Highlighted' : 'Highlight'}
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                              className="flex-1 py-2.5 bg-[#0a84ff] text-white text-[15px] rounded-full font-medium active:bg-[#007aff] flex items-center justify-center gap-2"
-                            >
-                              <Bookmark className="w-4 h-4" />
-                              Bookmark
-                            </button>
+                            {showColorPicker && selectedVerse === index + 1 && (
+                              <div className="flex gap-2 mt-2 pb-2">
+                                {highlightColors.map((color) => (
+                                  <button
+                                    key={color}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      saveHighlight(color);
+                                    }}
+                                    className="w-8 h-8 rounded-full border-2 border-white/30"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -543,16 +699,68 @@ export default function Home() {
                     {englishVerses.map((verse, index) => (
                       <div
                         key={index + 1}
-                        className="py-3 px-2 rounded-[10px] active:bg-[#2c2c2e]/50"
+                        onClick={() =>
+                          setSelectedVerse(
+                            selectedVerse === index + 1 ? null : index + 1,
+                          )
+                        }
+                        style={{ backgroundColor: getHighlight(index + 1) ? `${getHighlight(index + 1)}40` : undefined }}
+                        className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
                       >
                         <div className="flex gap-3">
                           <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
                             {index + 1}
                           </span>
-                          <p className="text-[#f5f5f7] text-[16px] leading-[1.5]">
+                          <p 
+                            className="text-[#f5f5f7] text-[16px] leading-[1.5] rounded px-1"
+                            style={{ backgroundColor: getHighlight(index + 1) || undefined }}
+                          >
                             {verse}
                           </p>
                         </div>
+                        {selectedVerse === index + 1 && (
+                          <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (getHighlight(index + 1)) {
+                                  saveHighlight(null);
+                                } else {
+                                  setShowColorPicker(!showColorPicker);
+                                }
+                              }}
+                              className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? 'border-2 border-[#ffeb3b]' : ''}`}
+                            >
+                              <Highlighter className="w-4 h-4" />
+                              {getHighlight(index + 1) ? 'Highlighted' : 'Highlight'}
+                            </button>
+                            {showColorPicker && selectedVerse === index + 1 && (
+                              <div className="flex gap-2 mt-2 pb-2">
+                                {highlightColors.map((color) => (
+                                  <button
+                                    key={color}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      saveHighlight(color);
+                                    }}
+                                    className="w-8 h-8 rounded-full border-2 border-white/30"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                saveBookmark();
+                              }}
+                              className={`flex-1 py-2.5 text-[15px] rounded-full font-medium flex items-center justify-center gap-2 ${isBookmarked(index + 1) ? 'bg-[#34c759] text-white' : 'bg-[#0a84ff] text-white active:bg-[#007aff]'}`}
+                            >
+                              <Bookmark className="w-4 h-4" />
+                              {isBookmarked(index + 1) ? 'Saved' : 'Save'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -563,16 +771,68 @@ export default function Home() {
                 {englishVerses.map((verse, index) => (
                   <div
                     key={index + 1}
-                    className="py-3 px-2 rounded-[10px] active:bg-[#2c2c2e]/50"
+                    onClick={() =>
+                      setSelectedVerse(
+                        selectedVerse === index + 1 ? null : index + 1,
+                      )
+                    }
+                    style={{ backgroundColor: getHighlight(index + 1) ? `${getHighlight(index + 1)}40` : undefined }}
+                    className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
                   >
                     <div className="flex gap-3">
                       <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
                         {index + 1}
                       </span>
-                      <p className="text-[#f5f5f7] text-[16px] leading-[1.5]">
+                      <p 
+                        className="text-[#f5f5f7] text-[16px] leading-[1.5] rounded px-1"
+                        style={{ backgroundColor: getHighlight(index + 1) || undefined }}
+                      >
                         {verse}
                       </p>
                     </div>
+                    {selectedVerse === index + 1 && (
+                      <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (getHighlight(index + 1)) {
+                              saveHighlight(null);
+                            } else {
+                              setShowColorPicker(!showColorPicker);
+                            }
+                          }}
+                          className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? 'border-2 border-[#ffeb3b]' : ''}`}
+                        >
+                          <Highlighter className="w-4 h-4" />
+                          {getHighlight(index + 1) ? 'Highlighted' : 'Highlight'}
+                        </button>
+                        {showColorPicker && selectedVerse === index + 1 && (
+                          <div className="flex gap-2 mt-2 pb-2">
+                            {highlightColors.map((color) => (
+                              <button
+                                key={color}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveHighlight(color);
+                                }}
+                                className="w-8 h-8 rounded-full border-2 border-white/30"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            saveBookmark();
+                          }}
+                          className={`flex-1 py-2.5 text-[15px] rounded-full font-medium flex items-center justify-center gap-2 ${isBookmarked(index + 1) ? 'bg-[#34c759] text-white' : 'bg-[#0a84ff] text-white active:bg-[#007aff]'}`}
+                        >
+                          <Bookmark className="w-4 h-4" />
+                          {isBookmarked(index + 1) ? 'Saved' : 'Save'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

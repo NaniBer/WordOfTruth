@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  turbopack: {}, // Enable turbopack
+  turbopack: {},
+  allowedDevOrigins: ["172.31.9.123", "172.31.9.123:3000"],
   async headers() {
     return [
       {
