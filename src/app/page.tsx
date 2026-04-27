@@ -131,6 +131,19 @@ export default function Home() {
   const touchStartY = useRef(0);
   const touchCurrentY = useRef(0);
 
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: "",
+    visible: false,
+  });
+
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast({ message: "", visible: false });
+    }, 2000);
+  };
+
   // Swipe navigation refs
   const contentRef = useRef<HTMLElement>(null);
   const swipeStartX = useRef(0);
@@ -363,29 +376,37 @@ export default function Home() {
     const amharicText = verses[verseNum - 1] || "";
     const englishText = englishVerses[verseNum - 1] || "";
     const verseLabel = getVerseLabel(verses, verseNum - 1);
-    
+
     const textToCopy = `${selectedBook.amharic} ${chapter}:${verseLabel}\n${selectedBook.name} ${chapter}:${verseLabel}\n\n${amharicText}\n\n${englishText}`;
-    
+
     try {
       // Try modern clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
+        showToast("Copied to clipboard");
       } else {
         // Fallback for older browsers or non-secure contexts
-        const textArea = document.createElement('textarea');
+        const textArea = document.createElement("textarea");
         textArea.value = textToCopy;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '0';
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        
-        document.execCommand('copy');
+
+        const successful = document.execCommand("copy");
         document.body.removeChild(textArea);
+
+        if (successful) {
+          showToast("Copied to clipboard");
+        } else {
+          showToast("Failed to copy");
+        }
       }
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
+      showToast("Failed to copy");
     }
   };
 
@@ -1284,6 +1305,15 @@ export default function Home() {
                 English translation coming soon...
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast.visible && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300">
+          <div className="bg-[#1c1c1e] text-white px-4 py-2 rounded-full shadow-lg border border-white/10 text-[14px] font-medium">
+            {toast.message}
           </div>
         </div>
       )}
