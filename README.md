@@ -8,14 +8,37 @@ A Progressive Web App (PWA) Bible reader with **Amharic** and **English** transl
 
 ## ✨ Features
 
-- 📱 **PWA Support** - Install on iPhone/Android home screen, works offline
-- 🌍 **Bilingual** - Amharic (Haile Selassie 1962) + English (KJV/WEB)
-- 🔍 **Search** - Search verses by keyword in both languages
-- 🔖 **Bookmarks** - Save your favorite verses
-- 🖍️ **Highlights** - Highlight verses with colors
-- 📖 **Side-by-Side** - Compare Amharic and English translations
-- 🌙 **Dark Mode** - Easy on the eyes
-- ⚡ **Fast** - Local storage, instant loading
+### 📱 Core Reading
+- **Bilingual** - Amharic (Haile Selassie 1962 + NASB) + English (NIV, NLT, CSB)
+- **Three View Modes** - Amharic only, English only, or side-by-side
+- **Proper Ethiopian Book Names** - Uses correct Amharic titles
+- **Verse Merging** - Handles combined verses (e.g., 1-4 as one verse)
+
+### 🔄 Navigation
+- **Swipe Navigation** - Swipe left/right to change chapters
+- **Book/Chapter Picker** - iOS-style bottom sheet selector
+- **Previous/Next Buttons** - Easy chapter navigation
+
+### 🔖 Bookmarks & Highlights
+- **Save Verses** - Bookmark your favorite passages
+- **Color Highlights** - Highlight with 5 colors (Yellow, Green, Blue, Pink, Purple)
+- **Saved Verses Tab** - View all your bookmarks
+
+### 📋 Copy & Share
+- **Copy Button** - Copy any verse to clipboard
+- **Formatted Output** - Includes both Amharic and English with references
+- **Toast Notification** - Confirms when copied
+
+### 📴 Offline Support
+- **Works Offline** - PWA with service worker caching
+- **Manual Cache** - Download all Bible data for offline use
+- **Offline Indicator** - Shows when you're offline
+
+### 🎨 UI/UX
+- **Dark Theme** - Easy on the eyes
+- **Bottom Navigation** - Bible, Saved, Settings tabs
+- **Version Selectors** - Switch between translations
+- **Responsive** - Works on mobile and desktop
 
 ## 🚀 Getting Started
 
@@ -39,30 +62,32 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 📱 Install on iPhone (No App Store needed!)
+### 📱 Install on iPhone (PWA)
 
 1. Open Safari on your iPhone
-2. Go to your computer's IP address (e.g., `http://192.168.1.x:3000`)
+2. Go to your hosted URL
 3. Tap **Share** button
 4. Tap **"Add to Home Screen"**
-5. Open from home screen - no address bar! 🎉
+5. Open from home screen - works offline! 🎉
 
 ## 📚 Bible Versions
 
 ### Amharic
-- **Haile Selassie 1962** - The official Ethiopian Orthodox Bible
+- **Haile Selassie 1962** - Ethiopian Orthodox Bible
+- **Amharic NASB** - New American Standard Bible in Amharic
 
 ### English
-- **KJV** (King James Version) - Classic English, public domain
-- **WEB** (World English Bible) - Modern English, public domain
+- **NIV** (New International Version)
+- **NLT** (New Living Translation)
+- **CSB** (Christian Standard Bible)
 
 ## 🛠️ Tech Stack
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Storage:** IndexedDB (local browser storage)
-- **PWA:** next-pwa
+- **Storage:** localStorage (bookmarks/highlights) + Cache API (Bible data)
+- **PWA:** Custom service worker
 
 ## 📁 Project Structure
 
@@ -70,34 +95,54 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 my-bible-pwa/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx      # Root layout with PWA meta tags
-│   │   ├── page.tsx        # Main Bible reader
+│   │   ├── layout.tsx      # Root layout with PWA setup
+│   │   ├── page.tsx        # Main Bible reader app
 │   │   └── globals.css     # Global styles
-│   └── components/         # React components
-├── data/
-│   ├── amharic/           # Amharic Bible JSON files
-│   └── english/           # English Bible JSON files
+│   └── components/         # (future components)
 ├── public/
+│   ├── data/              # Bible JSON files (1-66)
+│   │   ├── amharic_bible/
+│   │   ├── amharic_nasb/
+│   │   └── english/
+│   ├── sw.js              # Service worker
 │   ├── manifest.json      # PWA manifest
 │   └── icons/             # App icons
-└── next.config.ts         # Next.js + PWA config
+├── PROGRESS.md            # Development progress tracker
+└── README.md              # This file
 ```
+
+## 🗂️ Bible Data
+
+Bible data is stored in `/public/data/` as numbered JSON files (1.json - 66.json):
+- `amharic_bible/` - Haile Selassie 1962
+- `amharic_nasb/` - Amharic NASB
+- `english/niv/` - NIV
+- `english/nlt/` - NLT
+- `english/csb/` - CSB
+
+> **Note:** Bible data is gitignored. You need to add your own translation files or use the cache feature in Settings to download them.
 
 ## 🎯 Roadmap
 
-- [x] Basic UI with book/chapter navigation
-- [x] PWA configuration
-- [ ] Add real Bible data
+See [PROGRESS.md](./PROGRESS.md) for detailed development progress.
+
+### ✅ Completed
+- [x] Bilingual support (Amharic + English)
+- [x] Swipe navigation
+- [x] Bookmarks & highlights
+- [x] Copy to clipboard
+- [x] Offline support with PWA
+- [x] Settings tab
+
+### 🔄 In Progress / Planned
 - [ ] Search functionality
-- [ ] Bookmarks
-- [ ] Verse highlighting
-- [ ] Side-by-side comparison
 - [ ] Reading plans
 - [ ] Audio narration
+- [ ] Font size settings
+- [ ] Verse notes
+- [ ] Share via native share sheet
 
 ## 🤝 Contributing
-
-This project was inspired by [dagmawibabi/mybible](https://github.com/dagmawibabi/mybible) - a Flutter Bible app.
 
 Contributions welcome! Feel free to:
 - Report bugs
@@ -107,13 +152,12 @@ Contributions welcome! Feel free to:
 ## 📄 License
 
 - Code: MIT License
-- Bible data: Public Domain (KJV, WEB, Haile Selassie Amharic)
+- Bible data: Public Domain (where applicable)
 
 ## 🙏 Credits
 
-- Bible data from [magna25/amharic-bible-json](https://github.com/magna25/amharic-bible-json)
-- Inspired by [dagmawibabi/mybible](https://github.com/dagmawibabi/mybible)
+Made with ❤️ for personal Bible study
 
 ---
 
-Made with ❤️ for personal Bible study
+**See [PROGRESS.md](./PROGRESS.md) for detailed feature list and development history.**
