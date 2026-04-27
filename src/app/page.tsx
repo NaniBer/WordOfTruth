@@ -330,6 +330,45 @@ export default function Home() {
     return highlights[id] || null;
   };
 
+  // Copy verse to clipboard with fallback
+  const copyVerse = async (verseNum: number) => {
+    const amharicText = verses[verseNum - 1] || "";
+    const englishText = englishVerses[verseNum - 1] || "";
+    const verseLabel = getVerseLabel(verses, verseNum - 1);
+    
+    const textToCopy = `${selectedBook.amharic} ${chapter}:${verseLabel}\n${selectedBook.name} ${chapter}:${verseLabel}\n\n${amharicText}\n\n${englishText}`;
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+        alert('Verse copied to clipboard!');
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = textToCopy;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          alert('Verse copied to clipboard!');
+        } else {
+          alert('Failed to copy verse');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy verse: ' + (err as Error).message);
+    }
+  };
+
   // Helper functions for verse display with merged verses (empty strings)
   // Check if a verse should be shown (skip empty verses that follow content)
   const shouldShowVerse = (verses: string[], index: number): boolean => {
@@ -725,6 +764,18 @@ export default function Home() {
                             ? "Highlighted"
                             : "Highlight"}
                         </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyVerse(index + 1);
+                          }}
+                          className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </button>
                         {showColorPicker && selectedVerse === index + 1 && (
                           <div className="flex gap-2 mt-2 pb-2">
                             {highlightColors.map((color) => (
@@ -817,18 +868,30 @@ export default function Home() {
                                     style={{ backgroundColor: color }}
                                   />
                                 ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : null
-                    ))}
-                  </div>
-                </div>
-                <div ref={englishScrollRef} className="flex-1 overflow-y-auto">
-                  <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
-                    English ({englishVersion.toUpperCase()})
+                               </div>
+                             )}
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 copyVerse(index + 1);
+                               }}
+                               className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                             >
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                               </svg>
+                               Copy
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     ) : null
+                     ))}
+                   </div>
+                 </div>
+                 <div ref={englishScrollRef} className="flex-1 overflow-y-auto">
+                   <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
+                     English ({englishVersion.toUpperCase()})
                   </div>
                   <div className="space-y-1">
                     {englishVerses.map((verse, index) => (
@@ -891,25 +954,27 @@ export default function Home() {
                                     style={{ backgroundColor: color }}
                                   />
                                 ))}
-                              </div>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                saveBookmark();
-                              }}
-                              className={`flex-1 py-2.5 text-[15px] rounded-full font-medium flex items-center justify-center gap-2 ${isBookmarked(index + 1) ? "bg-[#34c759] text-white" : "bg-[#0a84ff] text-white active:bg-[#007aff]"}`}
-                            >
-                              <Bookmark className="w-4 h-4" />
-                              {isBookmarked(index + 1) ? "Saved" : "Save"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                               </div>
+                             )}
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 copyVerse(index + 1);
+                               }}
+                               className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                             >
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                               </svg>
+                               Copy
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               </div>
             ) : (
               <div className="space-y-1">
                 {englishVerses.map((verse, index) => (
@@ -971,29 +1036,31 @@ export default function Home() {
                                 style={{ backgroundColor: color }}
                               />
                             ))}
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            saveBookmark();
-                          }}
-                          className={`flex-1 py-2.5 text-[15px] rounded-full font-medium flex items-center justify-center gap-2 ${isBookmarked(index + 1) ? "bg-[#34c759] text-white" : "bg-[#0a84ff] text-white active:bg-[#007aff]"}`}
-                        >
-                          <Bookmark className="w-4 h-4" />
-                          {isBookmarked(index + 1) ? "Saved" : "Save"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </main>
+                           </div>
+                         )}
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             copyVerse(index + 1);
+                           }}
+                           className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                           </svg>
+                           Copy
+                         </button>
+                       </div>
+                     )}
+                   </div>
+                 ))}
+               </div>
+             )}
+           </>
+         )}
+       </main>
 
-      {/* Bottom Navigation */}
+       {/* Bottom Navigation */}
       <nav className="flex items-center justify-around px-2 pb-6 bg-[#1c1c1e] border-t border-white/5">
         <button
           onClick={() => setActiveTab("bible")}
