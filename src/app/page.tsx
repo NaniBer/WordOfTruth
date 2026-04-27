@@ -209,6 +209,38 @@ export default function Home() {
     return highlights[id] || null;
   };
 
+  // Helper functions for verse display with merged verses (empty strings)
+  // Check if a verse should be shown (skip empty verses that follow content)
+  const shouldShowVerse = (verses: string[], index: number): boolean => {
+    const verse = verses[index];
+    // Show if verse has content
+    if (verse !== "" && verse !== "-") return true;
+    // Hide if empty (these get merged with previous verse)
+    return false;
+  };
+
+  // Get the display label for a verse (e.g., "1", "1-4", "5")
+  const getVerseLabel = (verses: string[], index: number): string => {
+    const current = index + 1;
+
+    // Count how many consecutive empty verses follow this one
+    let endVerse = current;
+    for (let i = index + 1; i < verses.length; i++) {
+      if (verses[i] === "" || verses[i] === "-") {
+        endVerse = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    // If there are empty verses following, show range
+    if (endVerse > current) {
+      return `${current}-${endVerse}`;
+    }
+
+    return current.toString();
+  };
+
   const otBooks = amharicBooks.slice(0, 39);
   const ntBooks = amharicBooks.slice(39);
   const filteredBooks = testament === "old" ? otBooks : ntBooks;
@@ -480,6 +512,7 @@ export default function Home() {
             {translationView === "amharic" ? (
               <div className="space-y-1">
                 {verses.map((verse, index) => (
+                  shouldShowVerse(verses, index) ? (
                   <div
                     key={index + 1}
                     onClick={() =>
@@ -491,11 +524,7 @@ export default function Home() {
                   >
                     <div className="flex gap-3">
                       <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
-                        {(verse === "" || verse === "-") &&
-                        index < verses.length - 1 &&
-                        verses[index + 1] !== "" && verses[index + 1] !== "-"
-                          ? `${index + 1}-${index + 2}`
-                          : index + 1}
+                        {getVerseLabel(verses, index)}
                       </span>
                       <div className="flex-1 space-y-1">
                         <p
@@ -505,9 +534,7 @@ export default function Home() {
                               getHighlight(index + 1) || undefined,
                           }}
                         >
-                          {(verse === "" || verse === "-") && index < verses.length - 1
-                            ? verses[index + 1]
-                            : verse === "-" ? "" : verse}
+                          {verse}
                         </p>
                       </div>
                     </div>
@@ -543,6 +570,7 @@ export default function Home() {
                       </div>
                     )}
                   </div>
+                ) : null
                 ))}
               </div>
             ) : translationView === "both" ? (
@@ -556,6 +584,7 @@ export default function Home() {
                   </div>
                   <div className="space-y-1">
                     {verses.map((verse, index) => (
+                      shouldShowVerse(verses, index) ? (
                       <div
                         key={index + 1}
                         onClick={() =>
@@ -572,11 +601,7 @@ export default function Home() {
                       >
                         <div className="flex gap-3">
                           <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
-                            {(verse === "" || verse === "-") &&
-                            index < verses.length - 1 &&
-                            verses[index + 1] !== "" && verses[index + 1] !== "-"
-                              ? `${index + 1}-${index + 2}`
-                              : index + 1}
+                            {getVerseLabel(verses, index)}
                           </span>
                           <p
                             className="text-[#f5f5f7] text-[18px] leading-[1.6] rounded px-1"
@@ -585,9 +610,7 @@ export default function Home() {
                                 getHighlight(index + 1) || undefined,
                             }}
                           >
-                            {(verse === "" || verse === "-") && index < verses.length - 1
-                              ? verses[index + 1]
-                              : verse === "-" ? "" : verse}
+                            {verse}
                           </p>
                         </div>
                         {selectedVerse === index + 1 && (
@@ -626,6 +649,7 @@ export default function Home() {
                           </div>
                         )}
                       </div>
+                    ) : null
                     ))}
                   </div>
                 </div>
