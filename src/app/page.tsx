@@ -135,7 +135,6 @@ export default function Home() {
   const contentRef = useRef<HTMLElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
-  const [showVersePicker, setShowVersePicker] = useState(false);
 
   // Offline status
   const [isOnline, setIsOnline] = useState(true);
@@ -495,13 +494,6 @@ export default function Home() {
           <span className="text-white/60 text-[15px]">{chapter}</span>
           <ChevronDown className="w-4 h-4 text-white/60" />
         </button>
-          <button
-            onClick={() => setShowVersePicker(true)}
-            className="text-white/60 text-[13px] px-2 py-1 rounded-full bg-white/10 active:bg-white/20"
-            title="Jump to verse"
-          >
-            v
-          </button>
         <div className="flex items-center gap-1">
           <div className="flex items-center gap-1 bg-[#2c2c2e] rounded-lg p-1">
             <button
@@ -696,7 +688,6 @@ export default function Home() {
                   shouldShowVerse(verses, index) ? (
                   <div
                     key={index + 1}
-                    id={`verse-${index + 1}`}
                     onClick={() =>
                       setSelectedVerse(
                         selectedVerse === index + 1 ? null : index + 1,
@@ -769,7 +760,6 @@ export default function Home() {
                       shouldShowVerse(verses, index) ? (
                       <div
                         key={index + 1}
-                        id={`verse-${index + 1}`}
                         onClick={() =>
                           setSelectedVerse(
                             selectedVerse === index + 1 ? null : index + 1,
@@ -844,7 +834,6 @@ export default function Home() {
                     {englishVerses.map((verse, index) => (
                       <div
                         key={index + 1}
-                        id={`verse-${index + 1}`}
                         onClick={() =>
                           setSelectedVerse(
                             selectedVerse === index + 1 ? null : index + 1,
@@ -926,7 +915,6 @@ export default function Home() {
                 {englishVerses.map((verse, index) => (
                   <div
                     key={index + 1}
-                    id={`verse-${index + 1}`}
                     onClick={() =>
                       setSelectedVerse(
                         selectedVerse === index + 1 ? null : index + 1,
@@ -1175,51 +1163,6 @@ export default function Home() {
                   >
                     <div className="text-[15px] font-medium">{ch}</div>
                   </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Verse Picker */}
-      {showVersePicker && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowVersePicker(false)}
-          />
-          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h2 className="text-white text-[17px] font-semibold">
-                Jump to Verse
-              </h2>
-              <button
-                onClick={() => setShowVersePicker(false)}
-                className="text-[#0a84ff] text-[17px] font-medium"
-              >
-                Done
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-5 gap-2">
-                {verses.map((_, idx) => (
-                  shouldShowVerse(verses, idx) ? (
-                    <button
-                      key={idx + 1}
-                      onClick={() => {
-                        setSelectedVerse(idx + 1);
-                        setShowVersePicker(false);
-                        setTimeout(() => {
-                          const element = document.getElementById(`verse-${idx + 1}`);
-                          element?.scrollIntoView({ behavior: "smooth", block: "center" });
-                        }, 100);
-                      }}
-                      className={`p-3 rounded-lg text-center transition-colors ${selectedVerse === idx + 1 ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
-                    >
-                      <div className="text-[15px] font-medium">{getVerseLabel(verses, idx)}</div>
-                    </button>
-                  ) : null
                 ))}
               </div>
             </div>
