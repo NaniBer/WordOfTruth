@@ -133,8 +133,11 @@ export default function Home() {
 
   // Swipe navigation refs
   const contentRef = useRef<HTMLElement>(null);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
+  const swipeEndX = useRef(0);
+  const swipeEndY = useRef(0);
+  const isSwiping = useRef(false);
 
   // Offline status
   const [isOnline, setIsOnline] = useState(true);
@@ -197,26 +200,51 @@ export default function Home() {
     }
   };
 
-  // Swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
+  // Swipe handlers with tap vs swipe detection
+  const handleContentTouchStart = (e: React.TouchEvent) => {
+    swipeStartX.current = e.targetTouches[0].clientX;
+    swipeStartY.current = e.targetTouches[0].clientY;
+    swipeEndX.current = swipeStartX.current;
+    swipeEndY.current = swipeStartY.current;
+    isSwiping.current = false;
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
+  const handleContentTouchMove = (e: React.TouchEvent) => {
+    swipeEndX.current = e.targetTouches[0].clientX;
+    swipeEndY.current = e.targetTouches[0].clientY;
+    
+    // Check if this is a horizontal swipe (not vertical scroll)
+    const deltaX = Math.abs(swipeEndX.current - swipeStartX.current);
+    const deltaY = Math.abs(swipeEndY.current - swipeStartY.current);
+    
+    // If horizontal movement is greater than vertical, it's a swipe
+    if (deltaX > deltaY && deltaX > 10) {
+      isSwiping.current = true;
+    }
   };
 
-  const handleTouchEnd = () => {
-    const minSwipeDistance = 50;
-    const swipeDistance = touchEndX.current - touchStartX.current;
-
-    if (Math.abs(swipeDistance) > minSwipeDistance) {
-      if (swipeDistance > 0) {
+  const handleContentTouchEnd = () => {
+    const minSwipeDistance = 80; // Increased threshold
+    const deltaX = swipeEndX.current - swipeStartX.current;
+    const deltaY = swipeEndY.current - swipeStartY.current;
+    
+    // Only trigger if:
+    // 1. Horizontal distance is significant
+    // 2. Horizontal movement is greater than vertical (not scrolling)
+    // 3. We detected it as a swipe during touchMove
+    if (Math.abs(deltaX) > minSwipeDistance && 
+        Math.abs(deltaX) > Math.abs(deltaY) && 
+        isSwiping.current) {
+      if (deltaX > 0) {
+        // Swiped right - go to previous
         goToPreviousChapter();
       } else {
+        // Swiped left - go to next
         goToNextChapter();
       }
     }
+    
+    isSwiping.current = false;
   };
 
   // Cache all Bible data
@@ -342,7 +370,6 @@ export default function Home() {
       // Try modern clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
-        alert('Verse copied to clipboard!');
       } else {
         // Fallback for older browsers or non-secure contexts
         const textArea = document.createElement('textarea');
@@ -354,18 +381,11 @@ export default function Home() {
         textArea.focus();
         textArea.select();
         
-        const successful = document.execCommand('copy');
+        document.execCommand('copy');
         document.body.removeChild(textArea);
-        
-        if (successful) {
-          alert('Verse copied to clipboard!');
-        } else {
-          alert('Failed to copy verse');
-        }
       }
     } catch (err) {
       console.error('Failed to copy:', err);
-      alert('Failed to copy verse: ' + (err as Error).message);
     }
   };
 
@@ -623,9 +643,9 @@ export default function Home() {
       <main
         ref={contentRef}
         className="flex-1 overflow-y-auto px-4"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={handleContentTouchStart}
+        onTouchMove={handleContentTouchMove}
+        onTouchEnd={handleContentTouchEnd}
       >
         {loading ? (
           <div className="flex items-center justify-center h-full">
