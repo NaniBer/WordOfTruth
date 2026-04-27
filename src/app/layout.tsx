@@ -47,6 +47,25 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(function(error) {
+                      console.log('SW registration failed: ', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-slate-950 text-white overflow-hidden">
         {children}
       </body>

@@ -131,6 +131,32 @@ export default function Home() {
   const touchStartY = useRef(0);
   const touchCurrentY = useRef(0);
 
+  // Swipe navigation refs
+  const contentRef = useRef<HTMLElement>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const [showVersePicker, setShowVersePicker] = useState(false);
+
+  // Offline status
+  const [isOnline, setIsOnline] = useState(true);
+  const [cachingStatus, setCachingStatus] = useState<string | null>(null);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const highlightColors = [
     "#ffeb3b",
     "#4caf50",
@@ -138,6 +164,102 @@ export default function Home() {
     "#e91e63",
     "#9c27b0",
   ];
+
+  // Navigation functions
+  const goToNextChapter = () => {
+    if (chapter < selectedBook.chapters) {
+      setChapter(chapter + 1);
+      setSelectedVerse(null);
+    } else {
+      const currentBookIndex = amharicBooks.findIndex(
+        (b) => b.name === selectedBook.name
+      );
+      if (currentBookIndex < amharicBooks.length - 1) {
+        setSelectedBook(amharicBooks[currentBookIndex + 1]);
+        setChapter(1);
+        setSelectedVerse(null);
+      }
+    }
+  };
+
+  const goToPreviousChapter = () => {
+    if (chapter > 1) {
+      setChapter(chapter - 1);
+      setSelectedVerse(null);
+    } else {
+      const currentBookIndex = amharicBooks.findIndex(
+        (b) => b.name === selectedBook.name
+      );
+      if (currentBookIndex > 0) {
+        setSelectedBook(amharicBooks[currentBookIndex - 1]);
+        setChapter(amharicBooks[currentBookIndex - 1].chapters);
+        setSelectedVerse(null);
+      }
+    }
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const minSwipeDistance = 50;
+    const swipeDistance = touchEndX.current - touchStartX.current;
+
+    if (Math.abs(swipeDistance) > minSwipeDistance) {
+      if (swipeDistance > 0) {
+        goToPreviousChapter();
+      } else {
+        goToNextChapter();
+      }
+    }
+  };
+
+  // Cache all Bible data
+  const cacheAllBibleData = async () => {
+    if (!navigator.onLine) {
+      setCachingStatus('Cannot cache while offline');
+      setTimeout(() => setCachingStatus(null), 3000);
+      return;
+    }
+
+    setCachingStatus('Caching Bible data...');
+    const booksToCache = ['amharic_bible', 'amharic_nasb', 'english/niv', 'english/nlt', 'english/csb'];
+    let cached = 0;
+    const total = booksToCache.length * 66;
+
+    try {
+      const cache = await caches.open('wordoftruth-v1');
+      
+      for (const bookPath of booksToCache) {
+        for (let i = 1; i <= 66; i++) {
+          try {
+            const response = await fetch(`/data/${bookPath}/${i}.json`);
+            if (response.ok) {
+              await cache.put(`/data/${bookPath}/${i}.json`, response.clone());
+              cached++;
+              if (cached % 10 === 0) {
+                setCachingStatus(`Cached ${cached}/${total} files...`);
+              }
+            }
+          } catch (e) {
+            console.error(`Failed to cache ${bookPath}/${i}.json`);
+          }
+        }
+      }
+      
+      setCachingStatus(`✓ Cached ${cached} files for offline use`);
+      setTimeout(() => setCachingStatus(null), 3000);
+    } catch (error) {
+      setCachingStatus('Failed to cache data');
+      setTimeout(() => setCachingStatus(null), 3000);
+    }
+  };
 
   const saveBookmark = () => {
     if (selectedVerse === null) return;
@@ -373,6 +495,13 @@ export default function Home() {
           <span className="text-white/60 text-[15px]">{chapter}</span>
           <ChevronDown className="w-4 h-4 text-white/60" />
         </button>
+          <button
+            onClick={() => setShowVersePicker(true)}
+            className="text-white/60 text-[13px] px-2 py-1 rounded-full bg-white/10 active:bg-white/20"
+            title="Jump to verse"
+          >
+            v
+          </button>
         <div className="flex items-center gap-1">
           <div className="flex items-center gap-1 bg-[#2c2c2e] rounded-lg p-1">
             <button
@@ -424,6 +553,20 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Offline Indicator */}
+      {!isOnline && (
+        <div className="bg-amber-600 text-white text-center py-1 px-4 text-[13px]">
+          ⚠️ Offline Mode - Content is cached
+        </div>
+      )}
+
+      {/* Caching Status */}
+      {cachingStatus && (
+        <div className="bg-blue-600 text-white text-center py-1 px-4 text-[13px]">
+          {cachingStatus}
+        </div>
+      )}
+
       {/* Chapter Navigation */}
       <div className="flex items-center justify-between px-6 py-2 bg-[#1c1c1e] border-b border-white/5">
         <button
@@ -446,7 +589,13 @@ export default function Home() {
       </div>
 
       {/* Bible Content - Amharic Only */}
-      <main className="flex-1 overflow-y-auto px-4">
+      <main
+        ref={contentRef}
+        className="flex-1 overflow-y-auto px-4"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <span className="text-white/50">Loading...</span>
@@ -507,6 +656,38 @@ export default function Home() {
               </div>
             )}
           </div>
+        ) : activeTab === "settings" ? (
+          <div className="py-4 px-2 space-y-4">
+            <h2 className="text-white text-[20px] font-semibold mb-4">Settings</h2>
+            
+            {/* Offline Section */}
+            <div className="bg-[#2c2c2e] rounded-xl p-4">
+              <h3 className="text-white text-[17px] font-medium mb-3">Offline Access</h3>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-white/70 text-[15px]">Status</span>
+                <span className={`text-[14px] font-medium ${isOnline ? 'text-green-400' : 'text-amber-400'}`}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              <button
+                onClick={cacheAllBibleData}
+                disabled={!isOnline}
+                className="w-full py-3 bg-[#0a84ff] text-white rounded-xl text-[15px] font-medium active:bg-[#007aff] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cache All Bible Data
+              </button>
+              <p className="text-white/50 text-[13px] mt-2">
+                Download all Bible translations for offline reading. Requires internet connection.
+              </p>
+            </div>
+
+            {/* About Section */}
+            <div className="bg-[#2c2c2e] rounded-xl p-4">
+              <h3 className="text-white text-[17px] font-medium mb-2">About</h3>
+              <p className="text-white/70 text-[15px]">Word of Truth Bible App</p>
+              <p className="text-white/50 text-[13px] mt-1">Version 1.0</p>
+            </div>
+          </div>
         ) : (
           <>
             {translationView === "amharic" ? (
@@ -515,6 +696,7 @@ export default function Home() {
                   shouldShowVerse(verses, index) ? (
                   <div
                     key={index + 1}
+                    id={`verse-${index + 1}`}
                     onClick={() =>
                       setSelectedVerse(
                         selectedVerse === index + 1 ? null : index + 1,
@@ -587,6 +769,7 @@ export default function Home() {
                       shouldShowVerse(verses, index) ? (
                       <div
                         key={index + 1}
+                        id={`verse-${index + 1}`}
                         onClick={() =>
                           setSelectedVerse(
                             selectedVerse === index + 1 ? null : index + 1,
@@ -661,6 +844,7 @@ export default function Home() {
                     {englishVerses.map((verse, index) => (
                       <div
                         key={index + 1}
+                        id={`verse-${index + 1}`}
                         onClick={() =>
                           setSelectedVerse(
                             selectedVerse === index + 1 ? null : index + 1,
@@ -742,6 +926,7 @@ export default function Home() {
                 {englishVerses.map((verse, index) => (
                   <div
                     key={index + 1}
+                    id={`verse-${index + 1}`}
                     onClick={() =>
                       setSelectedVerse(
                         selectedVerse === index + 1 ? null : index + 1,
@@ -990,6 +1175,51 @@ export default function Home() {
                   >
                     <div className="text-[15px] font-medium">{ch}</div>
                   </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Verse Picker */}
+      {showVersePicker && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowVersePicker(false)}
+          />
+          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h2 className="text-white text-[17px] font-semibold">
+                Jump to Verse
+              </h2>
+              <button
+                onClick={() => setShowVersePicker(false)}
+                className="text-[#0a84ff] text-[17px] font-medium"
+              >
+                Done
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-5 gap-2">
+                {verses.map((_, idx) => (
+                  shouldShowVerse(verses, idx) ? (
+                    <button
+                      key={idx + 1}
+                      onClick={() => {
+                        setSelectedVerse(idx + 1);
+                        setShowVersePicker(false);
+                        setTimeout(() => {
+                          const element = document.getElementById(`verse-${idx + 1}`);
+                          element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 100);
+                      }}
+                      className={`p-3 rounded-lg text-center transition-colors ${selectedVerse === idx + 1 ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
+                    >
+                      <div className="text-[15px] font-medium">{getVerseLabel(verses, idx)}</div>
+                    </button>
+                  ) : null
                 ))}
               </div>
             </div>
