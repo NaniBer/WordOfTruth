@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 AGENTS.md
+
+# Bible data files (copyrighted - users must add their own)
+/data/
+/public/data/
+!/public/data/.gitkeep
