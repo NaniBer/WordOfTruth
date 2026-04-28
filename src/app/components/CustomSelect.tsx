@@ -46,12 +46,12 @@ export function CustomSelect({
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1`}
+        className={`${t.bgSecondary} ${t.text} text-xs rounded-lg px-3 py-2 border ${t.border} cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-between gap-2`}
         style={{ minWidth }}
       >
-        <span>{selectedOption?.label}</span>
+        <span className="font-medium">{selectedOption?.label}</span>
         <ChevronDown
-          className={`w-3 h-3 ${t.textSecondary} transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 ${t.textSecondary} transition-transform duration-200 flex-shrink-0 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -59,20 +59,20 @@ export function CustomSelect({
 
       {isOpen && (
         <div
-          className={`absolute top-full right-0 mt-1 ${t.surface} rounded-lg shadow-lg overflow-hidden z-50 min-w-full`}
+          className={`absolute top-full right-0 mt-1.5 ${t.bgSecondary} border ${t.border} rounded-lg shadow-xl overflow-hidden z-50 min-w-[120px]`}
         >
-          {options.map((option) => (
+          {options.map((option, index) => (
             <button
               key={option.value}
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-xs ${t.text} hover:${t.bgTertiary} transition-colors ${
-                option.value === value ? t.bgTertiary : ""
-              }`}
+              className={`w-full text-left px-4 py-3 text-xs ${t.text} hover:${t.navActive} transition-colors ${
+                option.value === value ? t.navActive : ""
+              } ${index !== options.length - 1 ? `border-b ${t.border}` : ""}`}
             >
-              {option.label}
+              <span className="font-medium">{option.label}</span>
             </button>
           ))}
         </div>
