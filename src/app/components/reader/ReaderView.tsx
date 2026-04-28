@@ -13,6 +13,7 @@ interface Book {
   name: string;
   amharic: string;
   abbr: string;
+  abbrEnglish: string;
   chapters: number;
 }
 
@@ -107,7 +108,7 @@ export function ReaderView({
         >
           {selectedBook ? (
             <span className={`${t.text} text-sm font-bold`}>
-              {selectedBook.name}
+              {selectedBook.abbrEnglish}
             </span>
           ) : (
             <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>

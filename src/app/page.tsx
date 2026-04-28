@@ -27,14 +27,8 @@ import {
   type HighlightData,
   type HighlightsMap,
 } from "@/utils/highlights";
-import {
-  saveLastLocation,
-  loadLastLocation,
-} from "@/utils/lastLocation";
-import {
-  saveViewSettings,
-  loadViewSettings,
-} from "@/utils/viewSettings";
+import { saveLastLocation, loadLastLocation } from "@/utils/lastLocation";
+import { saveViewSettings, loadViewSettings } from "@/utils/viewSettings";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
 export default function Home() {
@@ -127,7 +121,12 @@ export default function Home() {
 
   // Save view settings whenever they change
   useEffect(() => {
-    saveViewSettings({ translationView, englishVersion, amharicVersion, fontSizeIdx });
+    saveViewSettings({
+      translationView,
+      englishVersion,
+      amharicVersion,
+      fontSizeIdx,
+    });
   }, [translationView, englishVersion, amharicVersion, fontSizeIdx]);
 
   useEffect(() => {
@@ -376,7 +375,9 @@ export default function Home() {
 
     // Small delay to ensure verses are rendered
     const timeoutId = setTimeout(() => {
-      const verseElement = document.querySelector(`[data-verse-num="${selectedVerse}"]`);
+      const verseElement = document.querySelector(
+        `[data-verse-num="${selectedVerse}"]`,
+      );
       if (verseElement) {
         verseElement.scrollIntoView({ behavior: "smooth", block: "center" });
         // Keep it selected but clear the scroll trigger after scrolling

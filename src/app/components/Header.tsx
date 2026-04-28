@@ -6,6 +6,7 @@ interface Book {
   name: string;
   amharic: string;
   abbr: string;
+  abbrEnglish: string;
   chapters: number;
 }
 
@@ -46,7 +47,7 @@ export const Header = ({
         <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
           <span className={`text-base font-bold ${t.text}`}>
             {translationView === "english"
-              ? selectedBook.name
+              ? selectedBook.abbrEnglish
               : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
           </span>
         </div>
@@ -85,7 +86,9 @@ export const Header = ({
               { value: "nlt", label: "NLT" },
               { value: "csb", label: "CSB" },
             ]}
-            onChange={(value) => setEnglishVersion(value as "niv" | "nlt" | "csb")}
+            onChange={(value) =>
+              setEnglishVersion(value as "niv" | "nlt" | "csb")
+            }
             t={t}
             minWidth="60px"
           />
@@ -98,7 +101,23 @@ export const Header = ({
               { value: "amharic_bible", label: "Haile Selassie" },
               { value: "amharic_nasb", label: "NASB" },
             ]}
-            onChange={(value) => setAmharicVersion(value as "amharic_bible" | "amharic_nasb")}
+            onChange={(value) =>
+              setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
+            }
+            t={t}
+            minWidth="90px"
+          />
+        )}
+        {translationView === "both" && (
+          <CustomSelect
+            value={amharicVersion}
+            options={[
+              { value: "amharic_bible", label: "Haile Selassie" },
+              { value: "amharic_nasb", label: "NASB" },
+            ]}
+            onChange={(value) =>
+              setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
+            }
             t={t}
             minWidth="90px"
           />
