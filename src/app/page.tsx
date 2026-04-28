@@ -31,11 +31,18 @@ import {
   saveLastLocation,
   loadLastLocation,
 } from "@/utils/lastLocation";
+import {
+  saveViewSettings,
+  loadViewSettings,
+} from "@/utils/viewSettings";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
 export default function Home() {
+  // Load persisted settings first
+  const lastLocation = loadLastLocation();
+  const viewSettings = loadViewSettings();
+
   const [selectedBook, setSelectedBook] = useState(() => {
-    const lastLocation = loadLastLocation();
     if (lastLocation) {
       const book = amharicBooks.find((b) => b.name === lastLocation.bookName);
       if (book) return book;
@@ -50,7 +57,6 @@ export default function Home() {
     );
   });
   const [chapter, setChapter] = useState(() => {
-    const lastLocation = loadLastLocation();
     return lastLocation?.chapter ?? 1;
   });
   const [verses, setVerses] = useState<string[]>([]);
@@ -60,15 +66,16 @@ export default function Home() {
   const [testament, setTestament] = useState<"old" | "new">("old");
   const [activeTab, setActiveTab] = useState("bible");
   const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">(
-    "niv",
+    viewSettings.englishVersion,
   );
   const [englishVerses, setEnglishVerses] = useState<string[]>([]);
   const [amharicVersion, setAmharicVersion] = useState<
     "amharic_bible" | "amharic_nasb"
-  >("amharic_bible");
+  >(viewSettings.amharicVersion);
+
   const [translationView, setTranslationView] = useState<
     "amharic" | "english" | "both"
-  >("amharic");
+  >(viewSettings.translationView);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
@@ -80,7 +87,7 @@ export default function Home() {
     }
     setMounted(true);
   }, []);
-  const [fontSizeIdx, setFontSizeIdx] = useState(1);
+  const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
 
   const [highlights, setHighlights] = useState<HighlightsMap>(loadHighlights);
   const amharicScrollRef = useRef<HTMLDivElement>(null);
@@ -117,6 +124,11 @@ export default function Home() {
   useEffect(() => {
     saveLastLocation(selectedBook.name, chapter);
   }, [selectedBook.name, chapter]);
+
+  // Save view settings whenever they change
+  useEffect(() => {
+    saveViewSettings({ translationView, englishVersion, amharicVersion, fontSizeIdx });
+  }, [translationView, englishVersion, amharicVersion, fontSizeIdx]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
