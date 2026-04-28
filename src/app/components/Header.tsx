@@ -36,7 +36,7 @@ export const Header = ({
 }: HeaderProps) => {
   return (
     <header
-      className={`flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
+      className={`relative z-30 flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
       style={{ paddingTop: 44 }}
     >
       <button

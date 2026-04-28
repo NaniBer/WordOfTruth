@@ -17,7 +17,7 @@ export function ChapterNavigation({
 }: Props) {
   return (
     <div
-      className={`flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}
+      className={`relative z-20 flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}
     >
       {/* Prev */}
       <button

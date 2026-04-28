@@ -59,7 +59,7 @@ export function CustomSelect({
 
       {isOpen && (
         <div
-          className={`absolute top-full right-0 mt-1.5 ${t.bgSecondary} border ${t.border} rounded-lg shadow-xl overflow-hidden z-50 min-w-[120px]`}
+          className={`absolute top-full right-0 mt-1.5 ${t.bgSecondary} border ${t.border} rounded-lg shadow-xl overflow-hidden z-[60] min-w-[120px]`}
         >
           {options.map((option, index) => (
             <button
