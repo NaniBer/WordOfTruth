@@ -76,11 +76,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   // Load theme synchronously to prevent flash
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "light";
-    const saved = localStorage.getItem("bible-theme") as Theme | null;
-    return saved && THEMES[saved] ? saved : "light";
-  });
+  const [theme, setTheme] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
   const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
 
   const [highlights, setHighlights] = useState<HighlightsMap>(() => {
@@ -98,6 +95,14 @@ export default function Home() {
     message: "",
     visible: false,
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("bible-theme") as Theme | null;
+    if (saved && THEMES[saved]) {
+      setTheme(saved);
+    }
+    setMounted(true);
+  }, []);
 
   const showToast = (message: string) => {
     setToast({ message, visible: true });
