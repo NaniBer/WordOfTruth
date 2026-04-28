@@ -120,17 +120,17 @@ test.describe('Copy Verse Feature', () => {
     const bookButton = page.locator('button').filter({ hasText: /Genesis|ዘፍ/ }).first();
     await bookButton.click();
 
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(1000);
 
-    const exodusButton = page.getByText(/Exodus|ዘጸ/);
+    const exodusButton = page.getByText(/Exodus|ዘጸ/).first();
     await exodusButton.click();
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     const firstVerse = page.locator('div').filter({ hasText: /1/ }).first();
     await firstVerse.click();
 
-    const copyButton = page.getByText('Copy');
+    const copyButton = page.getByRole('button', { name: 'Copy' }).first();
     await copyButton.click();
 
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
@@ -138,12 +138,12 @@ test.describe('Copy Verse Feature', () => {
   });
 
   test('should copy verse after switching languages', async ({ page }) => {
-    const bothViewButton = page.getByText('አማ+ENG');
+    const bothViewButton = page.getByRole('button', { name: 'አማ+ENG', exact: true });
     await bothViewButton.click();
 
     await page.waitForTimeout(500);
 
-    const englishViewButton = page.getByText('ENG');
+    const englishViewButton = page.getByRole('button', { name: 'ENG', exact: true });
     await englishViewButton.click();
 
     await page.waitForTimeout(500);
@@ -151,7 +151,7 @@ test.describe('Copy Verse Feature', () => {
     const firstVerse = page.locator('div').filter({ hasText: /1/ }).first();
     await firstVerse.click();
 
-    const copyButton = page.getByText('Copy');
+    const copyButton = page.getByRole('button', { name: 'Copy' }).first();
     await copyButton.click();
 
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());

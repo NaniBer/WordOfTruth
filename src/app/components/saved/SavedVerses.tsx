@@ -1,16 +1,39 @@
 import { HIGHLIGHT_LABELS } from "@/app/constants/themes";
 import { SavedGroup } from "./SavedGroup";
 
-type Props = {
-  highlights: Record<string, any>;
+interface Book {
+  name: string;
+  amharic: string;
+  abbr: string;
+  chapters: number;
+}
+
+interface HighlightData {
+  colorIdx: number;
+  bookName: string;
+  bookAmharic: string;
+  chapter: number;
+  verse: number;
+  amharic: string;
+  english: string;
+  timestamp: number;
+}
+
+interface SavedVersesProps {
+  highlights: Record<string, HighlightData>;
   highlightColors: string[];
-  amharicBooks: any[];
-  setSelectedBook: (b: any) => void;
-  setChapter: (n: number) => void;
+  amharicBooks: Book[];
+  setSelectedBook: (book: Book) => void;
+  setChapter: (chapter: number) => void;
+  setSelectedVerse: (verse: number | null) => void;
   setActiveTab: (tab: string) => void;
   removeHighlight: (id: string) => void;
-  t: any;
-};
+  t: {
+    textSecondary: string;
+    gradient: string;
+    textTertiary: string;
+  };
+}
 
 export function SavedVersesView({
   highlights,
@@ -18,10 +41,11 @@ export function SavedVersesView({
   amharicBooks,
   setSelectedBook,
   setChapter,
+  setSelectedVerse,
   setActiveTab,
   removeHighlight,
   t,
-}: Props) {
+}: SavedVersesProps) {
   const saved = Object.values(highlights);
 
   return (
@@ -44,7 +68,7 @@ export function SavedVersesView({
         <div className="space-y-4">
           {[0, 1, 2].map((colorIdx) => {
             const color = highlightColors[colorIdx];
-            const group = saved.filter((h: any) => h.colorIdx === colorIdx);
+            const group = saved.filter((h) => h.colorIdx === colorIdx);
 
             if (!group.length) return null;
 
@@ -55,11 +79,12 @@ export function SavedVersesView({
                 label={HIGHLIGHT_LABELS[colorIdx]}
                 items={group}
                 t={t}
-                onOpen={(h: any) => {
+                onOpen={(h: HighlightData) => {
                   const book = amharicBooks.find((b) => b.name === h.bookName);
                   if (book) {
                     setSelectedBook(book);
                     setChapter(h.chapter);
+                    setSelectedVerse(h.verse);
                     setActiveTab("bible");
                   }
                 }}

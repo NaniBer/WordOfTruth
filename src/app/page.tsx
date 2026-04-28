@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import { amharicBooks } from "./constants/books";
 import { THEMES, Theme } from "./constants/themes";
 import { FONT_SIZES } from "./constants/fonts";
@@ -337,6 +338,23 @@ export default function Home() {
     }
   };
 
+  // Scroll to selected verse after navigation from Saved verses
+  useEffect(() => {
+    if (selectedVerse === null || activeTab !== "bible" || loading) return;
+
+    // Small delay to ensure verses are rendered
+    const timeoutId = setTimeout(() => {
+      const verseElement = document.querySelector(`[data-verse-num="${selectedVerse}"]`);
+      if (verseElement) {
+        verseElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Keep it selected but clear the scroll trigger after scrolling
+        // (don't clear selectedVerse as user might want to see it highlighted)
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedVerse, activeTab, loading]);
+
   const VerseActions = ({ verseNum }: { verseNum: number }) => {
     const currentHighlightIdx = getHighlightIdx(verseNum);
     return (
@@ -431,6 +449,7 @@ export default function Home() {
     return (
       <div
         key={verseNum}
+        data-verse-num={verseNum}
         onClick={() =>
           setSelectedVerse(selectedVerse === verseNum ? null : verseNum)
         }
@@ -474,6 +493,7 @@ export default function Home() {
             amharicBooks={amharicBooks}
             setSelectedBook={setSelectedBook}
             setChapter={setChapter}
+            setSelectedVerse={setSelectedVerse}
             setActiveTab={setActiveTab}
             removeHighlight={removeHighlight}
             t={t}
