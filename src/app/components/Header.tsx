@@ -31,30 +31,42 @@ export const Header = ({
   onSearchClick,
 }: HeaderProps) => {
   return (
-    <header
-      className={`relative z-30 flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
-      style={{ paddingTop: 44 }}
-    >
-      <button
-        onClick={() => setShowBookPicker(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] transition-all"
+    <>
+      {/* Main header - book, chapter, search */}
+      <header
+        className={`relative z-30 flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
+        style={{ paddingTop: 44 }}
       >
-        <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
-          <span className={`text-base font-bold ${t.text}`}>
-            {translationView === "english"
-              ? selectedBook.abbrEnglish
-              : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
+        <button
+          onClick={() => setShowBookPicker(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] transition-all"
+        >
+          <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
+            <span className={`text-base font-bold ${t.text}`}>
+              {translationView === "english"
+                ? selectedBook.abbrEnglish
+                : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
+            </span>
+          </div>
+
+          <span className={`${t.textSecondary} text-sm font-medium`}>
+            {chapter}
           </span>
-        </div>
 
-        <span className={`${t.textSecondary} text-sm font-medium`}>
-          {chapter}
-        </span>
+          <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
+        </button>
 
-        <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
-      </button>
+        <button
+          onClick={onSearchClick}
+          className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
+        >
+          <Search className="w-[20px] h-[20px]" />
+        </button>
+      </header>
 
-      <div className="flex items-center gap-1.5">
+      {/* Controls row - language selector + version selectors */}
+      <div className={`flex items-center justify-between px-4 py-2 ${t.navBg} border-b ${t.border}`}>
+        {/* Language selector */}
         <div
           className={`flex items-center gap-0.5 ${t.bgTertiary} rounded-xl p-1 backdrop-blur-sm`}
         >
@@ -73,58 +85,39 @@ export const Header = ({
           ))}
         </div>
 
-        {translationView === "english" && (
-          <CustomSelect
-            value={englishVersion}
-            options={[
-              { value: "niv", label: "NIV" },
-              { value: "nlt", label: "NLT" },
-              { value: "csb", label: "CSB" },
-            ]}
-            onChange={(value) =>
-              setEnglishVersion(value as "niv" | "nlt" | "csb")
-            }
-            t={t}
-            minWidth="60px"
-          />
-        )}
-
-        {translationView === "amharic" && (
-          <CustomSelect
-            value={amharicVersion}
-            options={[
-              { value: "amharic_bible", label: "Amh 1954" },
-              { value: "amharic_nasb", label: "NASB" },
-            ]}
-            onChange={(value) =>
-              setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
-            }
-            t={t}
-            minWidth="75px"
-          />
-        )}
-        {translationView === "both" && (
-          <CustomSelect
-            value={amharicVersion}
-            options={[
-              { value: "amharic_bible", label: "Amh 1954" },
-              { value: "amharic_nasb", label: "NASB" },
-            ]}
-            onChange={(value) =>
-              setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
-            }
-            t={t}
-            minWidth="75px"
-          />
-        )}
-
-        <button
-          onClick={onSearchClick}
-          className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
-        >
-          <Search className="w-[20px] h-[20px]" />
-        </button>
+        {/* Version selectors */}
+        <div className="flex items-center gap-2">
+          {(translationView === "english" || translationView === "both") && (
+            <CustomSelect
+              value={englishVersion}
+              options={[
+                { value: "niv", label: "NIV" },
+                { value: "nlt", label: "NLT" },
+                { value: "csb", label: "CSB" },
+              ]}
+              onChange={(value) =>
+                setEnglishVersion(value as "niv" | "nlt" | "csb")
+              }
+              t={t}
+              minWidth="60px"
+            />
+          )}
+          {(translationView === "amharic" || translationView === "both") && (
+            <CustomSelect
+              value={amharicVersion}
+              options={[
+                { value: "amharic_bible", label: "Amh 1954" },
+                { value: "amharic_nasb", label: "NASB" },
+              ]}
+              onChange={(value) =>
+                setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
+              }
+              t={t}
+              minWidth="75px"
+            />
+          )}
+        </div>
       </div>
-    </header>
+    </>
   );
 };
