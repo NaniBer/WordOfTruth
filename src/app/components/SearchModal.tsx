@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 import { ThemeConfig } from "../constants/themes";
 import { Book } from "../types/book";
+import { getDataUrl } from "../../utils/dataUrl";
 
 interface SearchResult {
   book: Book;
@@ -35,8 +36,8 @@ async function loadBookData(bookIndex: number, amharicVersion: string, englishVe
 
   try {
     const [amharicRes, englishRes] = await Promise.all([
-      fetch(`/data/${amharicVersion}/${bookIndex + 1}.json`),
-      fetch(`/data/english/${englishVersion}/${bookIndex + 1}.json`),
+      fetch(getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`)),
+      fetch(getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`)),
     ]);
 
     if (!amharicRes.ok) return null;

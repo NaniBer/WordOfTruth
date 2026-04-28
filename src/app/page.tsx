@@ -31,6 +31,7 @@ import {
 import { saveLastLocation, loadLastLocation } from "@/utils/lastLocation";
 import { saveViewSettings, loadViewSettings } from "@/utils/viewSettings";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { getDataUrl } from "@/utils/dataUrl";
 
 export default function Home() {
   // Load persisted settings first
@@ -285,7 +286,7 @@ export default function Home() {
           (b) => b.name === selectedBook.name,
         );
         const amharicResponse = await fetch(
-          `/data/${amharicVersion}/${bookIndex + 1}.json`,
+          getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`),
         );
         const amharicData = await amharicResponse.json();
         const amharicChapter = amharicData.chapters.find(
@@ -293,7 +294,7 @@ export default function Home() {
         );
         setVerses(amharicChapter?.verses || []);
         const englishResponse = await fetch(
-          `/data/english/${englishVersion}/${bookIndex + 1}.json`,
+          getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`),
         );
         if (englishResponse.ok) {
           const englishData = await englishResponse.json();
