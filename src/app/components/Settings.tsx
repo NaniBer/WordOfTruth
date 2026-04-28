@@ -10,6 +10,7 @@ interface SettingsProps {
   isOnline: boolean;
   cacheAllBibleData: () => void;
   t: ThemeConfig;
+  isCached?: boolean;
 }
 
 export function SettingsView({
@@ -22,6 +23,7 @@ export function SettingsView({
   isOnline,
   cacheAllBibleData,
   t,
+  isCached = false,
 }: SettingsProps) {
   return (
     <div className="py-12 px-1 space-y-4">
@@ -112,17 +114,33 @@ export function SettingsView({
           </span>
         </div>
 
-        <button
-          onClick={cacheAllBibleData}
-          disabled={!isOnline}
-          className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98]`}
-        >
-          Cache All Bible Data
-        </button>
-
-        <p className={`${t.textTertiary} text-xs mt-2`}>
-          Download all translations for offline reading.
-        </p>
+        {isCached ? (
+          <>
+            <button
+              onClick={cacheAllBibleData}
+              disabled={!isOnline}
+              className={`w-full py-3 ${t.surface} ${t.text} border ${t.border} rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
+            >
+              Re-cache Bible Data
+            </button>
+            <p className={`${t.textTertiary} text-xs`}>
+              ✅ Bible data is cached for offline use. Tap to refresh.
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={cacheAllBibleData}
+              disabled={!isOnline}
+              className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
+            >
+              Cache All Bible Data
+            </button>
+            <p className={`${t.textTertiary} text-xs`}>
+              Download all translations for offline reading.
+            </p>
+          </>
+        )}
       </div>
 
       {/* About */}

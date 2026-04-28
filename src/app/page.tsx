@@ -110,6 +110,7 @@ export default function Home() {
 
   const [isOnline, setIsOnline] = useState(true);
   const [cachingStatus, setCachingStatus] = useState<string | null>(null);
+  const [isDataCached, setIsDataCached] = useState(false);
 
   const t = THEMES[theme];
 
@@ -142,6 +143,22 @@ export default function Home() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
+  }, []);
+
+  // Check if bible data is cached
+  useEffect(() => {
+    async function checkCache() {
+      try {
+        const cache = await caches.open('wordoftruth-v1');
+        // Check if at least Genesis is cached
+        const testUrl = getDataUrl('data/amharic_bible/1.json');
+        const cached = await cache.match(testUrl);
+        setIsDataCached(!!cached);
+      } catch {
+        setIsDataCached(false);
+      }
+    }
+    checkCache();
   }, []);
 
   const highlightColors = t.highlightColors;
@@ -181,7 +198,13 @@ export default function Home() {
 
   const cacheAllBibleData = () => {
     cacheBibleData({
-      setStatus: setCachingStatus,
+      setStatus: (msg) => {
+        setCachingStatus(msg);
+        // If caching is complete (success message), mark as cached
+        if (msg && msg.includes('Cached') && msg.includes('files')) {
+          setIsDataCached(true);
+        }
+      },
     });
   };
 
@@ -611,6 +634,7 @@ export default function Home() {
             isOnline={isOnline}
             cacheAllBibleData={cacheAllBibleData}
             t={t}
+            isCached={isDataCached}
           />
         );
 
@@ -658,9 +682,11 @@ export default function Home() {
         />
       )}
 
-      <StatusBanner type="offline" isOnline={isOnline} />
-
-      <StatusBanner type="caching" message={cachingStatus ?? undefined} />
+      {/* Status Banners - add top padding when not on bible tab */}
+      <div className={activeTab !== "bible" ? "pt-14" : ""}>
+        <StatusBanner type="offline" isOnline={isOnline} />
+        <StatusBanner type="caching" message={cachingStatus ?? undefined} />
+      </div>
 
       {/* Bible Content */}
       <main
