@@ -46,10 +46,10 @@ export function CustomSelect({
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`${t.bgSecondary} ${t.text} text-xs rounded-lg px-3 py-2 border ${t.border} cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-between gap-2`}
+        className={`${t.bgSecondary} ${t.text} text-xs rounded-lg pl-3 pr-2 py-2 border ${t.border} cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-between gap-2`}
         style={{ minWidth }}
       >
-        <span className="font-medium">{selectedOption?.label}</span>
+        <span className="font-medium whitespace-nowrap">{selectedOption?.label}</span>
         <ChevronDown
           className={`w-3.5 h-3.5 ${t.textSecondary} transition-transform duration-200 flex-shrink-0 ${
             isOpen ? "rotate-180" : ""
@@ -59,7 +59,7 @@ export function CustomSelect({
 
       {isOpen && (
         <div
-          className={`absolute top-full right-0 mt-1.5 ${t.bgSecondary} border ${t.border} rounded-lg shadow-xl overflow-hidden z-[60] min-w-[120px]`}
+          className={`absolute top-full right-0 mt-1.5 ${t.bgSecondary} border ${t.border} rounded-lg shadow-xl overflow-hidden z-[60] min-w-[120px] `}
         >
           {options.map((option, index) => (
             <button
