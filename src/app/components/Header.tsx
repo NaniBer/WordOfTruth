@@ -100,7 +100,7 @@ export const Header = ({
               setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
             }
             t={t}
-            minWidth="90px"
+            minWidth="75px"
           />
         )}
         {translationView === "both" && (
@@ -114,7 +114,7 @@ export const Header = ({
               setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
             }
             t={t}
-            minWidth="90px"
+            minWidth="75px"
           />
         )}
 
