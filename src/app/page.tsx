@@ -5,17 +5,16 @@ import {
   Search,
   BookOpen,
   Bookmark,
-  Highlighter,
   Settings,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   BookMarked,
-  Languages,
   X,
+  Minus,
+  Plus,
 } from "lucide-react";
 
-// Book data with proper Amharic and English names
 const BOOKS_DATA = [
   { amharic: "ኦሪት ዘፍጥረት", english: "Genesis", abbr: "ዘፍ", chapters: 50 },
   { amharic: "ኦሪት ዘጸአት", english: "Exodus", abbr: "ዘጸ", chapters: 40 },
@@ -85,7 +84,6 @@ const BOOKS_DATA = [
   { amharic: "የዮሐንስ ራእይ", english: "Revelation", abbr: "ራእ", chapters: 22 },
 ];
 
-// Create amharicBooks array from BOOKS_DATA
 const amharicBooks = BOOKS_DATA.map((book) => ({
   name: book.english,
   amharic: book.amharic,
@@ -93,9 +91,202 @@ const amharicBooks = BOOKS_DATA.map((book) => ({
   chapters: book.chapters,
 }));
 
+type Theme = "light" | "warm" | "dark" | "midnight" | "amoled" | "ocean";
+
+const THEMES: Record<Theme, {
+  label: string;
+  emoji: string;
+  bg: string;
+  bgSecondary: string;
+  bgTertiary: string;
+  surface: string;
+  surfaceActive: string;
+  border: string;
+  borderLight: string;
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  primary: string;
+  primaryGlow: string;
+  verseText: string;
+  verseBg: string;
+  verseSelected: string;
+  navBg: string;
+  navActive: string;
+  gradient: string;
+  bookGradient: string;
+  dot: string;
+  highlightColors: [string, string, string];
+  highlightBg: [string, string, string];
+}> = {
+  light: {
+    label: "Light",
+    emoji: "☀️",
+    bg: "from-gray-50 via-white to-gray-100",
+    bgSecondary: "bg-white/80",
+    bgTertiary: "bg-gray-100/60",
+    surface: "bg-white border-gray-200",
+    surfaceActive: "bg-gray-50 border-gray-300",
+    border: "border-gray-200",
+    borderLight: "border-gray-300",
+    text: "text-gray-900",
+    textSecondary: "text-gray-500",
+    textTertiary: "text-gray-400",
+    primary: "text-indigo-600",
+    primaryGlow: "shadow-indigo-500/20",
+    verseText: "text-gray-800",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-indigo-50 border border-indigo-200",
+    navBg: "bg-white/90",
+    navActive: "bg-indigo-50 text-indigo-600",
+    gradient: "from-indigo-600 to-violet-600",
+    bookGradient: "from-indigo-600 to-violet-600",
+    dot: "bg-indigo-500",
+    highlightColors: ["#6366f1", "#f59e0b", "#10b981"],
+    highlightBg: ["bg-indigo-100", "bg-amber-100", "bg-emerald-100"],
+  },
+  warm: {
+    label: "Warm",
+    emoji: "📖",
+    bg: "from-[#faf6f0] via-[#f7f0e6] to-[#f3ead9]",
+    bgSecondary: "bg-[#f5edd8]/90",
+    bgTertiary: "bg-[#ede3c8]/70",
+    surface: "bg-[#fff8ed] border-[#e0d5be]",
+    surfaceActive: "bg-[#f5edd8] border-[#d4c9a8]",
+    border: "border-[#e0d5be]",
+    borderLight: "border-[#d4c9a8]",
+    text: "text-[#3d3222]",
+    textSecondary: "text-[#7a6b52]",
+    textTertiary: "text-[#a0916f]",
+    primary: "text-[#8b6914]",
+    primaryGlow: "shadow-amber-500/20",
+    verseText: "text-[#3a2e1a]",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-[#f0e4c8] border border-[#d4b86a]",
+    navBg: "bg-[#f7f0e6]/90",
+    navActive: "bg-[#f0e4c8] text-[#8b6914]",
+    gradient: "from-[#c99a1a] to-[#a67c00]",
+    bookGradient: "from-[#c99a1a] to-[#a67c00]",
+    dot: "bg-[#c99a1a]",
+    highlightColors: ["#b8860b", "#c05621", "#2d6a4f"],
+    highlightBg: ["bg-[#f5e6b8]", "bg-[#f5dbc8]", "bg-[#c8e6d8]"],
+  },
+  dark: {
+    label: "Dark",
+    emoji: "🌙",
+    bg: "from-[#1a1a2e] via-[#16213e] to-[#0f0f23]",
+    bgSecondary: "bg-[#1e1e36]/90",
+    bgTertiary: "bg-[#252545]/70",
+    surface: "bg-white/[0.05] border-white/[0.07]",
+    surfaceActive: "bg-white/[0.09] border-white/[0.12]",
+    border: "border-white/[0.07]",
+    borderLight: "border-white/[0.13]",
+    text: "text-gray-200",
+    textSecondary: "text-gray-400",
+    textTertiary: "text-gray-500",
+    primary: "text-purple-400",
+    primaryGlow: "shadow-purple-500/20",
+    verseText: "text-gray-200",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-purple-500/10 border border-purple-500/20",
+    navBg: "bg-[#1a1a2e]/90",
+    navActive: "bg-purple-500/15 text-purple-400",
+    gradient: "from-purple-500 to-indigo-500",
+    bookGradient: "from-purple-600 to-indigo-600",
+    dot: "bg-purple-500",
+    highlightColors: ["#a78bfa", "#fbbf24", "#34d399"],
+    highlightBg: ["bg-purple-500/20", "bg-amber-500/20", "bg-emerald-500/20"],
+  },
+  midnight: {
+    label: "Midnight",
+    emoji: "✨",
+    bg: "from-[#030712] via-[#0a0e1a] to-[#0f0a1e]",
+    bgSecondary: "bg-[#111827]/80",
+    bgTertiary: "bg-[#1f2937]/60",
+    surface: "bg-white/[0.04] border-white/[0.06]",
+    surfaceActive: "bg-white/[0.08] border-white/[0.1]",
+    border: "border-white/[0.06]",
+    borderLight: "border-white/[0.12]",
+    text: "text-gray-100",
+    textSecondary: "text-gray-400",
+    textTertiary: "text-gray-500",
+    primary: "text-indigo-400",
+    primaryGlow: "shadow-indigo-500/20",
+    verseText: "text-gray-100",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-indigo-500/10 border border-indigo-500/20",
+    navBg: "bg-[#030712]/90",
+    navActive: "bg-indigo-500/15 text-indigo-400",
+    gradient: "from-indigo-500 to-violet-500",
+    bookGradient: "from-indigo-600 to-violet-600",
+    dot: "bg-indigo-500",
+    highlightColors: ["#818cf8", "#fbbf24", "#6ee7b7"],
+    highlightBg: ["bg-indigo-500/20", "bg-amber-500/20", "bg-emerald-500/20"],
+  },
+  amoled: {
+    label: "AMOLED",
+    emoji: "🖤",
+    bg: "from-black via-black to-black",
+    bgSecondary: "bg-black",
+    bgTertiary: "bg-[#111]/80",
+    surface: "bg-white/[0.04] border-white/[0.05]",
+    surfaceActive: "bg-white/[0.08] border-white/[0.09]",
+    border: "border-white/[0.05]",
+    borderLight: "border-white/[0.1]",
+    text: "text-gray-100",
+    textSecondary: "text-gray-500",
+    textTertiary: "text-gray-600",
+    primary: "text-cyan-400",
+    primaryGlow: "shadow-cyan-500/20",
+    verseText: "text-gray-200",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-cyan-500/8 border border-cyan-500/15",
+    navBg: "bg-black/95",
+    navActive: "bg-cyan-500/10 text-cyan-400",
+    gradient: "from-cyan-500 to-teal-400",
+    bookGradient: "from-cyan-600 to-teal-500",
+    dot: "bg-cyan-500",
+    highlightColors: ["#22d3ee", "#a78bfa", "#fb923c"],
+    highlightBg: ["bg-cyan-500/15", "bg-violet-500/15", "bg-orange-500/15"],
+  },
+  ocean: {
+    label: "Ocean",
+    emoji: "🌊",
+    bg: "from-[#0a192f] via-[#0c2340] to-[#071528]",
+    bgSecondary: "bg-[#0d2137]/90",
+    bgTertiary: "bg-[#122e4f]/70",
+    surface: "bg-blue-500/[0.07] border-blue-400/[0.1]",
+    surfaceActive: "bg-blue-500/[0.12] border-blue-400/[0.16]",
+    border: "border-blue-900/30",
+    borderLight: "border-blue-700/35",
+    text: "text-blue-50",
+    textSecondary: "text-blue-300/70",
+    textTertiary: "text-blue-400/50",
+    primary: "text-teal-400",
+    primaryGlow: "shadow-teal-500/20",
+    verseText: "text-blue-50",
+    verseBg: "bg-transparent",
+    verseSelected: "bg-teal-500/10 border border-teal-500/20",
+    navBg: "bg-[#0a192f]/90",
+    navActive: "bg-teal-500/15 text-teal-400",
+    gradient: "from-teal-500 to-blue-500",
+    bookGradient: "from-teal-600 to-blue-600",
+    dot: "bg-teal-500",
+    highlightColors: ["#2dd4bf", "#818cf8", "#fbbf24"],
+    highlightBg: ["bg-teal-500/20", "bg-indigo-500/20", "bg-amber-500/20"],
+  },
+};
+
+const FONT_SIZES = [
+  { label: "S", size: "text-[15px] leading-[1.7]" },
+  { label: "M", size: "text-[17px] leading-[1.8]" },
+  { label: "L", size: "text-[19px] leading-[1.9]" },
+  { label: "XL", size: "text-[22px] leading-[2.0]" },
+];
+
 export default function Home() {
   const [selectedBook, setSelectedBook] = useState(
-    amharicBooks[0] || { name: "Genesis", amharic: "ኦሪት ዘፍጥረት", chapters: 50 },
+    amharicBooks[0] || { name: "Genesis", amharic: "ኦሪት ዘፍጥረት", abbr: "ዘፍ", chapters: 50 },
   );
   const [chapter, setChapter] = useState(1);
   const [verses, setVerses] = useState<string[]>([]);
@@ -104,16 +295,23 @@ export default function Home() {
   const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [testament, setTestament] = useState<"old" | "new">("old");
   const [activeTab, setActiveTab] = useState("bible");
-  const [showCompare, setShowCompare] = useState(false);
   const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">("niv");
   const [englishVerses, setEnglishVerses] = useState<string[]>([]);
-  const [showEnglish, setShowEnglish] = useState(false);
   const [amharicVersion, setAmharicVersion] = useState<"amharic_bible" | "amharic_nasb">("amharic_bible");
-  const [translationView, setTranslationView] = useState<
-    "amharic" | "english" | "both"
-  >("amharic");
+  const [translationView, setTranslationView] = useState<"amharic" | "english" | "both">("amharic");
   const [loading, setLoading] = useState(true);
-  const [bookmarks, setBookmarks] = useState<any[]>(() => {
+  const [theme, setTheme] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("bible-theme") as Theme | null;
+    if (saved && THEMES[saved]) {
+      setTheme(saved);
+    }
+    setMounted(true);
+  }, []);
+  const [fontSizeIdx, setFontSizeIdx] = useState(1);
+  const [bookmarks, setBookmarks] = useState<{ id: string; bookName: string; bookAmharic: string; chapter: number; verse: number; amharic: string; english: string; timestamp: number }[]>(() => {
     if (typeof window === "undefined") return [];
     const saved = localStorage.getItem("bible-bookmarks");
     return saved ? JSON.parse(saved) : [];
@@ -123,7 +321,6 @@ export default function Home() {
     const saved = localStorage.getItem("bible-highlights");
     return saved ? JSON.parse(saved) : {};
   });
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const amharicScrollRef = useRef<HTMLDivElement>(null);
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
@@ -131,7 +328,6 @@ export default function Home() {
   const touchStartY = useRef(0);
   const touchCurrentY = useRef(0);
 
-  // Toast notification state
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
     message: "",
     visible: false,
@@ -144,7 +340,6 @@ export default function Home() {
     }, 2000);
   };
 
-  // Swipe navigation refs
   const contentRef = useRef<HTMLElement>(null);
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
@@ -152,45 +347,37 @@ export default function Home() {
   const swipeEndY = useRef(0);
   const isSwiping = useRef(false);
 
-  // Offline status
   const [isOnline, setIsOnline] = useState(true);
   const [cachingStatus, setCachingStatus] = useState<string | null>(null);
 
-  // Monitor online/offline status
+  const t = THEMES[theme];
+
+  useEffect(() => {
+    localStorage.setItem("bible-theme", theme);
+  }, [theme]);
+
   useEffect(() => {
     setIsOnline(navigator.onLine);
-    
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
-  const highlightColors = [
-    "#ffeb3b",
-    "#4caf50",
-    "#2196f3",
-    "#e91e63",
-    "#9c27b0",
-  ];
+  const highlightColors = t.highlightColors;
 
-  // Navigation functions
   const goToNextChapter = () => {
     if (chapter < selectedBook.chapters) {
       setChapter(chapter + 1);
       setSelectedVerse(null);
     } else {
-      const currentBookIndex = amharicBooks.findIndex(
-        (b) => b.name === selectedBook.name
-      );
-      if (currentBookIndex < amharicBooks.length - 1) {
-        setSelectedBook(amharicBooks[currentBookIndex + 1]);
+      const idx = amharicBooks.findIndex((b) => b.name === selectedBook.name);
+      if (idx < amharicBooks.length - 1) {
+        setSelectedBook(amharicBooks[idx + 1]);
         setChapter(1);
         setSelectedVerse(null);
       }
@@ -202,18 +389,15 @@ export default function Home() {
       setChapter(chapter - 1);
       setSelectedVerse(null);
     } else {
-      const currentBookIndex = amharicBooks.findIndex(
-        (b) => b.name === selectedBook.name
-      );
-      if (currentBookIndex > 0) {
-        setSelectedBook(amharicBooks[currentBookIndex - 1]);
-        setChapter(amharicBooks[currentBookIndex - 1].chapters);
+      const idx = amharicBooks.findIndex((b) => b.name === selectedBook.name);
+      if (idx > 0) {
+        setSelectedBook(amharicBooks[idx - 1]);
+        setChapter(amharicBooks[idx - 1].chapters);
         setSelectedVerse(null);
       }
     }
   };
 
-  // Swipe handlers with tap vs swipe detection
   const handleContentTouchStart = (e: React.TouchEvent) => {
     swipeStartX.current = e.targetTouches[0].clientX;
     swipeStartY.current = e.targetTouches[0].clientY;
@@ -225,57 +409,39 @@ export default function Home() {
   const handleContentTouchMove = (e: React.TouchEvent) => {
     swipeEndX.current = e.targetTouches[0].clientX;
     swipeEndY.current = e.targetTouches[0].clientY;
-    
-    // Check if this is a horizontal swipe (not vertical scroll)
     const deltaX = Math.abs(swipeEndX.current - swipeStartX.current);
     const deltaY = Math.abs(swipeEndY.current - swipeStartY.current);
-    
-    // If horizontal movement is greater than vertical, it's a swipe
     if (deltaX > deltaY && deltaX > 10) {
       isSwiping.current = true;
     }
   };
 
   const handleContentTouchEnd = () => {
-    const minSwipeDistance = 80; // Increased threshold
+    const minSwipeDistance = 80;
     const deltaX = swipeEndX.current - swipeStartX.current;
     const deltaY = swipeEndY.current - swipeStartY.current;
-    
-    // Only trigger if:
-    // 1. Horizontal distance is significant
-    // 2. Horizontal movement is greater than vertical (not scrolling)
-    // 3. We detected it as a swipe during touchMove
-    if (Math.abs(deltaX) > minSwipeDistance && 
-        Math.abs(deltaX) > Math.abs(deltaY) && 
-        isSwiping.current) {
+    if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY) && isSwiping.current) {
       if (deltaX > 0) {
-        // Swiped right - go to previous
         goToPreviousChapter();
       } else {
-        // Swiped left - go to next
         goToNextChapter();
       }
     }
-    
     isSwiping.current = false;
   };
 
-  // Cache all Bible data
   const cacheAllBibleData = async () => {
     if (!navigator.onLine) {
-      setCachingStatus('Cannot cache while offline');
+      setCachingStatus("Cannot cache while offline");
       setTimeout(() => setCachingStatus(null), 3000);
       return;
     }
-
-    setCachingStatus('Caching Bible data...');
-    const booksToCache = ['amharic_bible', 'amharic_nasb', 'english/niv', 'english/nlt', 'english/csb'];
+    setCachingStatus("Caching Bible data...");
+    const booksToCache = ["amharic_bible", "amharic_nasb", "english/niv", "english/nlt", "english/csb"];
     let cached = 0;
     const total = booksToCache.length * 66;
-
     try {
-      const cache = await caches.open('wordoftruth-v1');
-      
+      const cache = await caches.open("wordoftruth-v1");
       for (const bookPath of booksToCache) {
         for (let i = 1; i <= 66; i++) {
           try {
@@ -292,11 +458,10 @@ export default function Home() {
           }
         }
       }
-      
-      setCachingStatus(`✓ Cached ${cached} files for offline use`);
+      setCachingStatus(`Cached ${cached} files for offline use`);
       setTimeout(() => setCachingStatus(null), 3000);
     } catch (error) {
-      setCachingStatus('Failed to cache data');
+      setCachingStatus("Failed to cache data");
       setTimeout(() => setCachingStatus(null), 3000);
     }
   };
@@ -356,14 +521,10 @@ export default function Home() {
         english: englishVerses[selectedVerse - 1] || "",
         timestamp: Date.now(),
       };
-      const updatedBookmarks = [
-        ...bookmarks.filter((b) => b.id !== id),
-        bookmark,
-      ];
+      const updatedBookmarks = [...bookmarks.filter((b) => b.id !== id), bookmark];
       setBookmarks(updatedBookmarks);
       localStorage.setItem("bible-bookmarks", JSON.stringify(updatedBookmarks));
     }
-    setShowColorPicker(false);
   };
 
   const getHighlight = (verseNum: number) => {
@@ -371,33 +532,25 @@ export default function Home() {
     return highlights[id] || null;
   };
 
-  // Copy verse to clipboard with fallback
   const copyVerse = async (verseNum: number) => {
     const amharicText = verses[verseNum - 1] || "";
     const englishText = englishVerses[verseNum - 1] || "";
     const verseLabel = getVerseLabel(verses, verseNum - 1);
-
     const textToCopy = `${selectedBook.amharic} ${chapter}:${verseLabel}\n${selectedBook.name} ${chapter}:${verseLabel}\n\n${amharicText}\n\n${englishText}`;
-
     try {
-      // Try modern clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
         showToast("Copied to clipboard");
       } else {
-        // Fallback for older browsers or non-secure contexts
         const textArea = document.createElement("textarea");
         textArea.value = textToCopy;
         textArea.style.position = "fixed";
         textArea.style.left = "-9999px";
-        textArea.style.top = "0";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-
         const successful = document.execCommand("copy");
         document.body.removeChild(textArea);
-
         if (successful) {
           showToast("Copied to clipboard");
         } else {
@@ -410,21 +563,14 @@ export default function Home() {
     }
   };
 
-  // Helper functions for verse display with merged verses (empty strings)
-  // Check if a verse should be shown (skip empty verses that follow content)
   const shouldShowVerse = (verses: string[], index: number): boolean => {
     const verse = verses[index];
-    // Show if verse has content
     if (verse !== "" && verse !== "-") return true;
-    // Hide if empty (these get merged with previous verse)
     return false;
   };
 
-  // Get the display label for a verse (e.g., "1", "1-4", "5")
   const getVerseLabel = (verses: string[], index: number): string => {
     const current = index + 1;
-
-    // Count how many consecutive empty verses follow this one
     let endVerse = current;
     for (let i = index + 1; i < verses.length; i++) {
       if (verses[i] === "" || verses[i] === "-") {
@@ -433,12 +579,9 @@ export default function Home() {
         break;
       }
     }
-
-    // If there are empty verses following, show range
     if (endVerse > current) {
       return `${current}-${endVerse}`;
     }
-
     return current.toString();
   };
 
@@ -446,34 +589,19 @@ export default function Home() {
   const ntBooks = amharicBooks.slice(39);
   const filteredBooks = testament === "old" ? otBooks : ntBooks;
 
-  // Load Amharic and English chapters when book or chapter changes
   useEffect(() => {
     async function loadChapter() {
       setLoading(true);
       try {
-        const bookIndex = amharicBooks.findIndex(
-          (b) => b.name === selectedBook.name,
-        );
-
-        // Load Amharic
-        const amharicResponse = await fetch(
-          `/data/${amharicVersion}/${bookIndex + 1}.json`,
-        );
+        const bookIndex = amharicBooks.findIndex((b) => b.name === selectedBook.name);
+        const amharicResponse = await fetch(`/data/${amharicVersion}/${bookIndex + 1}.json`);
         const amharicData = await amharicResponse.json();
-        const amharicChapter = amharicData.chapters.find(
-          (c: any) => c.chapter === chapter.toString(),
-        );
+        const amharicChapter = amharicData.chapters.find((c: any) => c.chapter === chapter.toString());
         setVerses(amharicChapter?.verses || []);
-
-        // Load English
-        const englishResponse = await fetch(
-          `/data/english/${englishVersion}/${bookIndex + 1}.json`,
-        );
+        const englishResponse = await fetch(`/data/english/${englishVersion}/${bookIndex + 1}.json`);
         if (englishResponse.ok) {
           const englishData = await englishResponse.json();
-          const englishChapter = englishData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
+          const englishChapter = englishData.chapters.find((c: any) => c.chapter === chapter.toString());
           setEnglishVerses(englishChapter?.verses || []);
         } else {
           setEnglishVerses([]);
@@ -490,43 +618,31 @@ export default function Home() {
 
   useEffect(() => {
     if (translationView !== "both") return;
-
     const amharicEl = amharicScrollRef.current;
     const englishEl = englishScrollRef.current;
-
     if (!amharicEl || !englishEl) return;
-
     const handleAmharicScroll = () => {
       if (isScrolling.current) return;
       const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
       const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
       if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
-
       isScrolling.current = true;
       const scrollRatio = amharicEl.scrollTop / amharicMaxScroll;
       englishEl.scrollTop = scrollRatio * englishMaxScroll;
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 50);
+      setTimeout(() => { isScrolling.current = false; }, 50);
     };
-
     const handleEnglishScroll = () => {
       if (isScrolling.current) return;
       const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
       const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
       if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
-
       isScrolling.current = true;
       const scrollRatio = englishEl.scrollTop / englishMaxScroll;
       amharicEl.scrollTop = scrollRatio * amharicMaxScroll;
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 50);
+      setTimeout(() => { isScrolling.current = false; }, 50);
     };
-
     amharicEl.addEventListener("scroll", handleAmharicScroll);
     englishEl.addEventListener("scroll", handleEnglishScroll);
-
     return () => {
       amharicEl.removeEventListener("scroll", handleAmharicScroll);
       englishEl.removeEventListener("scroll", handleEnglishScroll);
@@ -553,56 +669,134 @@ export default function Home() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-screen bg-black">
-      {/* Header */}
-      <header
-        className="flex items-center justify-between px-4 py-3 bg-[#1c1c1e] border-b border-white/5"
-        style={{ paddingTop: 44 }}
+  const HIGHLIGHT_LABELS = ["Faith", "Hope", "Love"] as const;
+
+  const VerseActions = ({ verseNum }: { verseNum: number }) => {
+    const currentHighlight = getHighlight(verseNum);
+    return (
+    <div className="mt-3 pt-3 border-t border-white/[0.08] flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        {highlightColors.map((color, i) => (
+          <button
+            key={color}
+            onClick={(e) => { e.stopPropagation(); saveHighlight(color); }}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 ${
+              currentHighlight === color
+                ? "ring-2 ring-offset-1 text-white shadow-md ring-offset-transparent"
+                : `${t.surfaceActive} ${t.textSecondary}`
+            }`}
+            style={currentHighlight === color
+              ? { backgroundColor: color, boxShadow: `0 0 0 2px ${color}, 0 0 0 4px transparent` }
+              : {}}
+          >
+            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: currentHighlight === color ? "white" : color }} />
+            {HIGHLIGHT_LABELS[i]}
+          </button>
+        ))}
+        {currentHighlight && (
+          <button
+            onClick={(e) => { e.stopPropagation(); saveHighlight(null); }}
+            className={`px-3 py-2 rounded-xl ${t.surfaceActive} ${t.textTertiary} text-xs font-semibold transition-all`}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => { e.stopPropagation(); copyVerse(verseNum); }}
+          className={`flex-1 py-2.5 rounded-xl ${t.surfaceActive} ${t.primary} text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copy
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); saveBookmark(); }}
+          className={`w-10 h-10 rounded-xl ${isBookmarked(verseNum) ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg` : `${t.surfaceActive} ${t.textTertiary}`} flex items-center justify-center transition-all duration-200`}
+        >
+          <Bookmark className="w-4 h-4" fill={isBookmarked(verseNum) ? "currentColor" : "none"} />
+        </button>
+      </div>
+    </div>
+    );
+  };
+
+  const VerseItem = ({ verse, index, versesArray, isEnglish }: { verse: string; index: number; versesArray: string[]; isEnglish?: boolean }) => {
+    const verseNum = index + 1;
+    const highlight = getHighlight(verseNum);
+    const isSelected = selectedVerse === verseNum;
+    const label = isEnglish ? (verseNum).toString() : getVerseLabel(versesArray, index);
+    const highlightIdx = highlight ? highlightColors.indexOf(highlight) : -1;
+
+    return (
+      <div
+        key={verseNum}
+        onClick={() => setSelectedVerse(selectedVerse === verseNum ? null : verseNum)}
+        className={`group py-3 px-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+          isSelected ? t.verseSelected : "hover:bg-white/[0.03]"
+        } ${highlight && highlightIdx >= 0 ? t.highlightBg[highlightIdx] : ""}`}
       >
+        <div className="flex gap-3">
+          <span className={`verse-number w-8 mt-1 text-sm font-semibold ${isSelected ? t.primary : highlight && highlightIdx >= 0 ? "" : t.textTertiary}`}
+            style={highlight && highlightIdx >= 0 ? { color: highlightColors[highlightIdx] } : undefined}
+          >
+            {label}
+          </span>
+          <div className="flex-1">
+            <p className={`verse-text ${FONT_SIZES[fontSizeIdx].size} ${t.verseText} rounded px-0.5`}
+            >
+              {verse}
+            </p>
+          </div>
+        </div>
+        {isSelected && <VerseActions verseNum={verseNum} />}
+      </div>
+    );
+  };
+
+  return (
+    <div className={`flex flex-col h-screen bg-gradient-to-b ${t.bg} transition-colors duration-500`}>
+      {/* Header */}
+      <header className={`flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`} style={{ paddingTop: 44 }}>
         <button
           onClick={() => setShowBookPicker(true)}
-          className="flex items-center gap-1"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] transition-all"
         >
-          <span className="text-white text-[14px] font-semibold">
-            {translationView === "amharic"
-              ? (selectedBook.abbr || selectedBook.amharic.slice(0, 4))
-              : translationView === "english"
-                ? selectedBook.name
-                : `${selectedBook.abbr || selectedBook.amharic.slice(0, 4)} / ${selectedBook.name}`}
-          </span>
-          <span className="text-white/60 text-[15px]">{chapter}</span>
-          <ChevronDown className="w-4 h-4 text-white/60" />
+          <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
+            <span className={`text-base font-bold ${t.text}`}>
+              {translationView === "amharic"
+                ? (selectedBook.abbr || selectedBook.amharic.slice(0, 4))
+                : translationView === "english"
+                  ? selectedBook.name
+                  : `${selectedBook.abbr || selectedBook.amharic.slice(0, 4)} / ${selectedBook.name}`}
+            </span>
+          </div>
+          <span className={`${t.textSecondary} text-sm font-medium`}>{chapter}</span>
+          <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
         </button>
-        <div className="flex items-center gap-1">
-          <div className="flex items-center gap-1 bg-[#2c2c2e] rounded-lg p-1">
-            <button
-              onClick={() => setTranslationView("amharic")}
-              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "amharic" ? "bg-[#0a84ff] text-white" : "text-white/70"}`}
-            >
-              አማ
-            </button>
-            <button
-              onClick={() => setTranslationView("both")}
-              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "both" ? "bg-[#0a84ff] text-white" : "text-white/70"}`}
-            >
-              አማ+ENG
-            </button>
-            <button
-              onClick={() => {
-                setTranslationView("english");
-                setShowEnglish(true);
-              }}
-              className={`px-2.5 py-1.5 rounded-md text-[13px] font-medium ${translationView === "english" ? "bg-[#0a84ff] text-white" : "text-white/70"}`}
-            >
-              ENG
-            </button>
+        <div className="flex items-center gap-1.5">
+          <div className={`flex items-center gap-0.5 ${t.bgTertiary} rounded-xl p-1 backdrop-blur-sm`}>
+            {(["amharic", "both", "english"] as const).map((view) => (
+              <button
+                key={view}
+                onClick={() => setTranslationView(view)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  translationView === view
+                    ? `bg-gradient-to-r ${t.gradient} text-white shadow-md`
+                    : `${t.textTertiary} hover:${t.textSecondary}`
+                }`}
+              >
+                {view === "amharic" ? "አማ" : view === "both" ? "አማ+EN" : "EN"}
+              </button>
+            ))}
           </div>
           {(translationView === "english" || translationView === "both") && (
             <select
               value={englishVersion}
               onChange={(e) => setEnglishVersion(e.target.value as "niv" | "nlt" | "csb")}
-              className="bg-[#2c2c2e] text-white text-[12px] rounded-lg px-2 py-1.5 border-none outline-none"
+              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm`}
             >
               <option value="niv">NIV</option>
               <option value="nlt">NLT</option>
@@ -613,151 +807,203 @@ export default function Home() {
             <select
               value={amharicVersion}
               onChange={(e) => setAmharicVersion(e.target.value as "amharic_bible" | "amharic_nasb")}
-              className="bg-[#2c2c2e] text-white text-[12px] rounded-lg px-2 py-1.5 border-none outline-none"
+              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm`}
             >
               <option value="amharic_bible">Haile Selassie</option>
               <option value="amharic_nasb">NASB</option>
             </select>
           )}
-          <button className="p-2">
-            <Search className="w-[22px] h-[22px] text-white/80" />
+          <button className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}>
+            <Search className="w-[20px] h-[20px]" />
           </button>
         </div>
       </header>
 
       {/* Offline Indicator */}
       {!isOnline && (
-        <div className="bg-amber-600 text-white text-center py-1 px-4 text-[13px]">
-          ⚠️ Offline Mode - Content is cached
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-1.5 px-4 text-xs font-semibold">
+          Offline Mode - Content is cached
         </div>
       )}
-
-      {/* Caching Status */}
       {cachingStatus && (
-        <div className="bg-blue-600 text-white text-center py-1 px-4 text-[13px]">
+        <div className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-center py-1.5 px-4 text-xs font-semibold">
           {cachingStatus}
         </div>
       )}
 
       {/* Chapter Navigation */}
-      <div className="flex items-center justify-between px-6 py-2 bg-[#1c1c1e] border-b border-white/5">
+      <div className={`flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}>
         <button
           onClick={handlePrevChapter}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 active:bg-white/20"
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
         >
-          <ChevronLeft className="w-4 h-4 text-white" />
-          <span className="text-white/80 text-[14px]">Prev</span>
+          <ChevronLeft className={`w-4 h-4 ${t.textSecondary}`} />
+          <span className={`${t.textSecondary} text-sm font-medium`}>Prev</span>
         </button>
-        <span className="text-white/50 text-[13px]">
-          Chapter {chapter} of {selectedBook.chapters}
-        </span>
+        <div className="text-center">
+          <span className={`${t.textTertiary} text-xs`}>
+            Ch. {chapter} / {selectedBook.chapters}
+          </span>
+        </div>
         <button
           onClick={handleNextChapter}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 active:bg-white/20"
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
         >
-          <span className="text-white/80 text-[14px]">Next</span>
-          <ChevronRight className="w-4 h-4 text-white" />
+          <span className={`${t.textSecondary} text-sm font-medium`}>Next</span>
+          <ChevronRight className={`w-4 h-4 ${t.textSecondary}`} />
         </button>
       </div>
 
-      {/* Bible Content - Amharic Only */}
+      {/* Bible Content */}
       <main
         ref={contentRef}
-        className="flex-1 overflow-y-auto px-4"
+        className="flex-1 overflow-y-auto px-4 py-2"
         onTouchStart={handleContentTouchStart}
         onTouchMove={handleContentTouchMove}
         onTouchEnd={handleContentTouchEnd}
       >
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <span className="text-white/50">Loading...</span>
+            <div className="flex flex-col items-center gap-3">
+              <div className={`w-10 h-10 rounded-full border-2 ${t.border} border-t-transparent animate-spin`} />
+              <span className={`${t.textTertiary} text-sm`}>Loading...</span>
+            </div>
           </div>
         ) : activeTab === "saved" ? (
-          <div className="py-2">
-            <div className="text-white/60 text-[15px] font-medium px-2 py-3">
-              Saved Verses ({bookmarks.length})
+          <div className="py-4 space-y-3">
+            <div className={`${t.textSecondary} text-lg font-bold px-1`}>
+              <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}>Saved</span> Verses ({bookmarks.length})
             </div>
             {bookmarks.length === 0 ? (
-              <div className="text-white/50 text-center py-8">
-                No saved verses yet. Tap a verse and bookmark it!
+              <div className={`${t.textTertiary} text-center py-16`}>
+                <BookMarked className={`w-12 h-12 mx-auto mb-3 ${t.textTertiary} opacity-30`} />
+                <p className="text-sm">No saved verses yet</p>
+                <p className="text-xs mt-1">Tap a verse to bookmark it</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {bookmarks
-                  .sort((a, b) => a.timestamp - b.timestamp)
+                  .sort((a, b) => b.timestamp - a.timestamp)
                   .map((bookmark) => (
                     <button
                       key={bookmark.id}
                       onClick={() => {
-                        const book = amharicBooks.find(
-                          (b) => b.name === bookmark.bookName,
-                        );
+                        const book = amharicBooks.find((b) => b.name === bookmark.bookName);
                         if (book) {
                           setSelectedBook(book);
                           setChapter(bookmark.chapter);
                           setActiveTab("bible");
                         }
                       }}
-                      className="w-full text-left p-3 rounded-lg bg-[#2c2c2e] active:bg-[#3a3a3c]"
+                      className={`w-full text-left p-4 rounded-2xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200 backdrop-blur-sm`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[#0a84ff] text-[14px] font-medium">
-                          {bookmark.bookAmharic} {bookmark.chapter}:
-                          {bookmark.verse}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent text-sm font-bold`}>
+                          {bookmark.bookAmharic} {bookmark.chapter}:{bookmark.verse}
                         </span>
-                      </div>
-                      <p className="text-white/80 text-[15px] leading-[1.4] line-clamp-2">
-                        {bookmark.amharic}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-white/50 text-[13px]">
-                          {bookmark.english}
-                        </p>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeBookmark(bookmark.id);
-                          }}
-                          className="text-[#ff453a] text-[13px] px-2 py-1 rounded bg-white/10"
+                          onClick={(e) => { e.stopPropagation(); removeBookmark(bookmark.id); }}
+                          className={`${t.textTertiary} hover:text-red-400 text-xs px-2.5 py-1 rounded-lg ${t.surface}`}
                         >
                           Remove
                         </button>
                       </div>
+                      <p className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}>
+                        {bookmark.amharic}
+                      </p>
+                      {bookmark.english && (
+                        <p className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}>
+                          {bookmark.english}
+                        </p>
+                      )}
                     </button>
                   ))}
               </div>
             )}
           </div>
         ) : activeTab === "settings" ? (
-          <div className="py-4 px-2 space-y-4">
-            <h2 className="text-white text-[20px] font-semibold mb-4">Settings</h2>
-            
-            {/* Offline Section */}
-            <div className="bg-[#2c2c2e] rounded-xl p-4">
-              <h3 className="text-white text-[17px] font-medium mb-3">Offline Access</h3>
+          <div className="py-4 px-1 space-y-4">
+            <div className={`text-lg font-bold ${t.text}`}>
+              <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}>Settings</span>
+            </div>
+
+            {/* Theme Picker */}
+            <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+              <h3 className={`${t.text} text-base font-semibold mb-3`}>Theme</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(THEMES) as Theme[]).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setTheme(key)}
+                    className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-200 ${
+                      theme === key ? `bg-gradient-to-r ${THEMES[key].gradient} text-white shadow-lg` : `${t.surfaceActive} ${t.textSecondary}`
+                    }`}
+                  >
+                    <span className="text-lg">{THEMES[key].emoji}</span>
+                    <span className="text-xs font-semibold">{THEMES[key].label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Font Size */}
+            <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+              <h3 className={`${t.text} text-base font-semibold mb-3`}>Font Size</h3>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setFontSizeIdx(Math.max(0, fontSizeIdx - 1))}
+                  className={`w-10 h-10 rounded-xl ${t.surfaceActive} flex items-center justify-center ${t.textSecondary}`}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className="flex gap-2">
+                  {FONT_SIZES.map((f, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setFontSizeIdx(i)}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
+                        i === fontSizeIdx ? `bg-gradient-to-r ${t.gradient} text-white shadow-md` : `${t.surfaceActive} ${t.textTertiary}`
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setFontSizeIdx(Math.min(FONT_SIZES.length - 1, fontSizeIdx + 1))}
+                  className={`w-10 h-10 rounded-xl ${t.surfaceActive} flex items-center justify-center ${t.textSecondary}`}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Offline */}
+            <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+              <h3 className={`${t.text} text-base font-semibold mb-3`}>Offline Access</h3>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-white/70 text-[15px]">Status</span>
-                <span className={`text-[14px] font-medium ${isOnline ? 'text-green-400' : 'text-amber-400'}`}>
-                  {isOnline ? 'Online' : 'Offline'}
+                <span className={`${t.textSecondary} text-sm`}>Status</span>
+                <span className={`text-sm font-semibold ${isOnline ? "text-emerald-400" : "text-amber-400"}`}>
+                  {isOnline ? "Online" : "Offline"}
                 </span>
               </div>
               <button
                 onClick={cacheAllBibleData}
                 disabled={!isOnline}
-                className="w-full py-3 bg-[#0a84ff] text-white rounded-xl text-[15px] font-medium active:bg-[#007aff] disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98]`}
               >
                 Cache All Bible Data
               </button>
-              <p className="text-white/50 text-[13px] mt-2">
-                Download all Bible translations for offline reading. Requires internet connection.
+              <p className={`${t.textTertiary} text-xs mt-2`}>
+                Download all translations for offline reading.
               </p>
             </div>
 
-            {/* About Section */}
-            <div className="bg-[#2c2c2e] rounded-xl p-4">
-              <h3 className="text-white text-[17px] font-medium mb-2">About</h3>
-              <p className="text-white/70 text-[15px]">Word of Truth Bible App</p>
-              <p className="text-white/50 text-[13px] mt-1">Version 1.0</p>
+            {/* About */}
+            <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+              <h3 className={`${t.text} text-base font-semibold mb-1`}>About</h3>
+              <p className={`${t.textSecondary} text-sm`}>Word of Truth Bible App</p>
+              <p className={`${t.textTertiary} text-xs mt-0.5`}>Version 2.0</p>
             </div>
           </div>
         ) : (
@@ -765,459 +1011,136 @@ export default function Home() {
             {translationView === "amharic" ? (
               <div className="space-y-1">
                 {verses.map((verse, index) => (
-                  shouldShowVerse(verses, index) ? (
-                  <div
-                    key={index + 1}
-                    onClick={() =>
-                      setSelectedVerse(
-                        selectedVerse === index + 1 ? null : index + 1,
-                      )
-                    }
-                    className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
-                  >
-                    <div className="flex gap-3">
-                      <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
-                        {getVerseLabel(verses, index)}
-                      </span>
-                      <div className="flex-1 space-y-1">
-                        <p
-                          className="text-[#f5f5f7] text-[18px] leading-[1.6] rounded px-1"
-                          style={{
-                            backgroundColor:
-                              getHighlight(index + 1) || undefined,
-                          }}
-                        >
-                          {verse}
-                        </p>
-                      </div>
-                    </div>
-                    {selectedVerse === index + 1 && (
-                      <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowColorPicker(!showColorPicker);
-                          }}
-                          className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? "border-2 border-[#ffeb3b]" : ""}`}
-                        >
-                          <Highlighter className="w-4 h-4" />
-                          {getHighlight(index + 1)
-                            ? "Highlighted"
-                            : "Highlight"}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            copyVerse(index + 1);
-                          }}
-                          className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          Copy
-                        </button>
-                        {showColorPicker && selectedVerse === index + 1 && (
-                          <div className="flex gap-2 mt-2 pb-2">
-                            {highlightColors.map((color) => (
-                              <button
-                                key={color}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  saveHighlight(color);
-                                }}
-                                className="w-8 h-8 rounded-full border-2 border-white/30"
-                                style={{ backgroundColor: color }}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : null
+                  shouldShowVerse(verses, index) ? <VerseItem key={index} verse={verse} index={index} versesArray={verses} /> : null
                 ))}
               </div>
             ) : translationView === "both" ? (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full gap-3">
                 <div
                   ref={amharicScrollRef}
-                  className="flex-1 overflow-y-auto border-b border-white/10"
+                  className="flex-1 overflow-y-auto rounded-2xl"
                 >
-                  <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
-                    አማርኛ
+                  <div className={`sticky top-0 z-10 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border} px-4 py-2 flex items-center gap-2`}>
+                    <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${t.gradient}`} />
+                    <span className={`${t.textTertiary} text-xs font-bold uppercase tracking-widest`}>Amharic</span>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 py-1">
                     {verses.map((verse, index) => (
-                      shouldShowVerse(verses, index) ? (
-                      <div
-                        key={index + 1}
-                        onClick={() =>
-                          setSelectedVerse(
-                            selectedVerse === index + 1 ? null : index + 1,
-                          )
-                        }
-                        style={{
-                          backgroundColor: getHighlight(index + 1)
-                            ? `${getHighlight(index + 1)}40`
-                            : undefined,
-                        }}
-                        className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
-                      >
-                        <div className="flex gap-3">
-                          <span className="text-[#0a84ff] font-medium text-[14px] w-8 mt-0.5">
-                            {getVerseLabel(verses, index)}
-                          </span>
-                          <p
-                            className="text-[#f5f5f7] text-[18px] leading-[1.6] rounded px-1"
-                            style={{
-                              backgroundColor:
-                                getHighlight(index + 1) || undefined,
-                            }}
-                          >
-                            {verse}
-                          </p>
-                        </div>
-                        {selectedVerse === index + 1 && (
-                          <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (getHighlight(index + 1)) {
-                                  saveHighlight(null);
-                                } else {
-                                  setShowColorPicker(!showColorPicker);
-                                }
-                              }}
-                              className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? "border-2 border-[#ffeb3b]" : ""}`}
-                            >
-                              <Highlighter className="w-4 h-4" />
-                              {getHighlight(index + 1)
-                                ? "Highlighted"
-                                : "Highlight"}
-                            </button>
-                            {showColorPicker && selectedVerse === index + 1 && (
-                              <div className="flex gap-2 mt-2 pb-2">
-                                {highlightColors.map((color) => (
-                                  <button
-                                    key={color}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      saveHighlight(color);
-                                    }}
-                                    className="w-8 h-8 rounded-full border-2 border-white/30"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                               </div>
-                             )}
-                             <button
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 copyVerse(index + 1);
-                               }}
-                               className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
-                             >
-                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                               </svg>
-                               Copy
-                             </button>
-                           </div>
-                         )}
-                       </div>
-                     ) : null
-                     ))}
-                   </div>
-                 </div>
-                 <div ref={englishScrollRef} className="flex-1 overflow-y-auto">
-                   <div className="text-[#8e8e93] text-[12px] font-medium uppercase tracking-wide px-2 py-2 sticky top-0 bg-[#000] z-10">
-                     English ({englishVersion.toUpperCase()})
+                      shouldShowVerse(verses, index) ? <VerseItem key={index} verse={verse} index={index} versesArray={verses} /> : null
+                    ))}
                   </div>
-                  <div className="space-y-1">
+                </div>
+                <div ref={englishScrollRef} className="flex-1 overflow-y-auto rounded-2xl">
+                  <div className={`sticky top-0 z-10 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border} px-4 py-2 flex items-center gap-2`}>
+                    <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${t.gradient}`} />
+                    <span className={`${t.textTertiary} text-xs font-bold uppercase tracking-widest`}>English ({englishVersion.toUpperCase()})</span>
+                  </div>
+                  <div className="space-y-1 py-1">
                     {englishVerses.map((verse, index) => (
-                      <div
-                        key={index + 1}
-                        onClick={() =>
-                          setSelectedVerse(
-                            selectedVerse === index + 1 ? null : index + 1,
-                          )
-                        }
-                        style={{
-                          backgroundColor: getHighlight(index + 1)
-                            ? `${getHighlight(index + 1)}40`
-                            : undefined,
-                        }}
-                        className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
-                      >
-                        <div className="flex gap-3">
-                          <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
-                            {index + 1}
-                          </span>
-                          <p
-                            className="text-[#f5f5f7] text-[16px] leading-[1.5] rounded px-1"
-                            style={{
-                              backgroundColor:
-                                getHighlight(index + 1) || undefined,
-                            }}
-                          >
-                            {verse}
-                          </p>
-                        </div>
-                        {selectedVerse === index + 1 && (
-                          <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (getHighlight(index + 1)) {
-                                  saveHighlight(null);
-                                } else {
-                                  setShowColorPicker(!showColorPicker);
-                                }
-                              }}
-                              className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? "border-2 border-[#ffeb3b]" : ""}`}
-                            >
-                              <Highlighter className="w-4 h-4" />
-                              {getHighlight(index + 1)
-                                ? "Highlighted"
-                                : "Highlight"}
-                            </button>
-                            {showColorPicker && selectedVerse === index + 1 && (
-                              <div className="flex gap-2 mt-2 pb-2">
-                                {highlightColors.map((color) => (
-                                  <button
-                                    key={color}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      saveHighlight(color);
-                                    }}
-                                    className="w-8 h-8 rounded-full border-2 border-white/30"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                               </div>
-                             )}
-                             <button
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 copyVerse(index + 1);
-                               }}
-                               className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
-                             >
-                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                               </svg>
-                               Copy
-                             </button>
-                           </div>
-                         )}
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               </div>
+                      shouldShowVerse(englishVerses, index) ? <VerseItem key={index} verse={verse} index={index} versesArray={englishVerses} isEnglish /> : null
+                    ))}
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-1">
                 {englishVerses.map((verse, index) => (
-                  <div
-                    key={index + 1}
-                    onClick={() =>
-                      setSelectedVerse(
-                        selectedVerse === index + 1 ? null : index + 1,
-                      )
-                    }
-                    style={{
-                      backgroundColor: getHighlight(index + 1)
-                        ? `${getHighlight(index + 1)}40`
-                        : undefined,
-                    }}
-                    className={`py-3 px-2 rounded-[10px] transition-all ${selectedVerse === index + 1 ? "bg-[#2c2c2e]" : "active:bg-[#2c2c2e]/50"}`}
-                  >
-                    <div className="flex gap-3">
-                      <span className="text-[#8e8e93] font-medium text-[14px] w-8 mt-0.5">
-                        {index + 1}
-                      </span>
-                      <p
-                        className="text-[#f5f5f7] text-[16px] leading-[1.5] rounded px-1"
-                        style={{
-                          backgroundColor: getHighlight(index + 1) || undefined,
-                        }}
-                      >
-                        {verse}
-                      </p>
-                    </div>
-                    {selectedVerse === index + 1 && (
-                      <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (getHighlight(index + 1)) {
-                              saveHighlight(null);
-                            } else {
-                              setShowColorPicker(!showColorPicker);
-                            }
-                          }}
-                          className={`flex-1 py-2.5 bg-[#3a3a3c] text-[#ff9f0a] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2 ${getHighlight(index + 1) ? "border-2 border-[#ffeb3b]" : ""}`}
-                        >
-                          <Highlighter className="w-4 h-4" />
-                          {getHighlight(index + 1)
-                            ? "Highlighted"
-                            : "Highlight"}
-                        </button>
-                        {showColorPicker && selectedVerse === index + 1 && (
-                          <div className="flex gap-2 mt-2 pb-2">
-                            {highlightColors.map((color) => (
-                              <button
-                                key={color}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  saveHighlight(color);
-                                }}
-                                className="w-8 h-8 rounded-full border-2 border-white/30"
-                                style={{ backgroundColor: color }}
-                              />
-                            ))}
-                           </div>
-                         )}
-                         <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             copyVerse(index + 1);
-                           }}
-                           className="flex-1 py-2.5 bg-[#3a3a3c] text-[#0a84ff] text-[15px] rounded-full font-medium active:bg-[#48484a] flex items-center justify-center gap-2"
-                         >
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                           </svg>
-                           Copy
-                         </button>
-                       </div>
-                     )}
-                   </div>
-                 ))}
-               </div>
-             )}
-           </>
-         )}
-       </main>
+                  shouldShowVerse(englishVerses, index) ? <VerseItem key={index} verse={verse} index={index} versesArray={englishVerses} isEnglish /> : null
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </main>
 
-       {/* Bottom Navigation */}
-      <nav className="flex items-center justify-around px-2 pb-6 bg-[#1c1c1e] border-t border-white/5">
-        <button
-          onClick={() => setActiveTab("bible")}
-          className={`flex flex-col items-center gap-1 px-6 py-1 rounded-xl ${activeTab === "bible" ? "bg-[#0a84ff]/20" : "active:bg-white/5"}`}
-        >
-          <BookOpen
-            className={`w-6 h-6 ${activeTab === "bible" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          />
-          <span
-            className={`text-[11px] font-medium ${activeTab === "bible" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          >
-            Bible
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab("saved")}
-          className={`flex flex-col items-center gap-1 px-6 py-1 rounded-xl ${activeTab === "saved" ? "bg-[#0a84ff]/20" : "active:bg-white/5"}`}
-        >
-          <BookMarked
-            className={`w-6 h-6 ${activeTab === "saved" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          />
-          <span
-            className={`text-[11px] font-medium ${activeTab === "saved" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          >
-            Saved
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`flex flex-col items-center gap-1 px-6 py-1 rounded-xl ${activeTab === "settings" ? "bg-[#0a84ff]/20" : "active:bg-white/5"}`}
-        >
-          <Settings
-            className={`w-6 h-6 ${activeTab === "settings" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          />
-          <span
-            className={`text-[11px] font-medium ${activeTab === "settings" ? "text-[#0a84ff]" : "text-[#8e8e93]"}`}
-          >
-            Settings
-          </span>
-        </button>
+      {/* Bottom Navigation */}
+      <nav className={`${t.navBg} backdrop-blur-2xl border-t ${t.border}`}>
+        <div className="flex items-center justify-around px-4 pt-2 pb-2" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))" }}>
+          {[
+            { id: "bible", icon: BookOpen, label: "Bible" },
+            { id: "saved", icon: BookMarked, label: "Saved" },
+            { id: "settings", icon: Settings, label: "Settings" },
+          ].map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex flex-col items-center gap-1 px-6 py-1.5 rounded-2xl transition-all duration-300 ${
+                activeTab === id ? t.navActive : `${t.textTertiary} hover:bg-white/[0.04]`
+              }`}
+            >
+              <Icon className={`w-[22px] h-[22px] transition-all duration-300 ${activeTab === id ? "drop-shadow" : ""}`} />
+              <span className="text-[11px] font-semibold">{label}</span>
+            </button>
+          ))}
+        </div>
       </nav>
 
-      {/* Book Picker - iOS Bottom Sheet */}
+      {/* Book Picker */}
       {showBookPicker && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowBookPicker(false)}
-          />
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowBookPicker(false)} />
           <div
             ref={sheetRef}
-            className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up"
+            className={`relative w-full max-w-lg ${t.bgSecondary} backdrop-blur-2xl rounded-t-3xl max-h-[85vh] overflow-hidden animate-slide-up border-t ${t.borderLight}`}
+            onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; }}
+            onTouchMove={(e) => {
+              touchCurrentY.current = e.touches[0].clientY;
+              const deltaY = touchCurrentY.current - touchStartY.current;
+              if (deltaY > 0 && sheetRef.current) {
+                sheetRef.current.style.transform = `translateY(${deltaY}px)`;
+              }
+            }}
+            onTouchEnd={() => {
+              const deltaY = touchCurrentY.current - touchStartY.current;
+              if (deltaY > 100) {
+                setShowBookPicker(false);
+              } else if (sheetRef.current) {
+                sheetRef.current.style.transform = "";
+              }
+            }}
           >
-            <div
-              className="flex justify-center pt-3 pb-1"
-              onTouchStart={(e) => {
-                touchStartY.current = e.touches[0].clientY;
-              }}
-              onTouchMove={(e) => {
-                touchCurrentY.current = e.touches[0].clientY;
-                const deltaY = touchCurrentY.current - touchStartY.current;
-                if (deltaY > 0) {
-                  sheetRef.current!.style.transform = `translateY(${deltaY}px)`;
-                }
-              }}
-              onTouchEnd={(e) => {
-                const deltaY = touchCurrentY.current - touchStartY.current;
-                if (deltaY > 100) {
-                  setShowBookPicker(false);
-                } else {
-                  sheetRef.current!.style.transform = "";
-                }
-              }}
-            >
-              <div className="w-9 h-1.25 bg-white/20 rounded-full" />
+            <div className="flex justify-center pt-3 pb-1">
+              <div className={`w-10 h-1 rounded-full ${theme === "light" ? "bg-gray-300" : "bg-white/20"}`} />
             </div>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h2 className="text-white text-[17px] font-semibold">መጽሐፍ</h2>
+            <div className={`flex items-center justify-between px-5 py-3 border-b ${t.border}`}>
+              <h2 className={`${t.text} text-lg font-bold`}>Select Book</h2>
               <button
                 onClick={() => setShowBookPicker(false)}
-                className="text-[#0a84ff] text-[17px] font-medium"
+                className={`w-8 h-8 rounded-full ${t.surface} flex items-center justify-center ${t.textSecondary}`}
               >
-                Done
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex px-4 py-2 gap-2">
-              <button
-                onClick={() => setTestament("old")}
-                className={`flex-1 py-2 rounded-lg text-[15px] font-medium ${testament === "old" ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-[#8e8e93]"}`}
-              >
-                Old Testament
-              </button>
-              <button
-                onClick={() => setTestament("new")}
-                className={`flex-1 py-2 rounded-lg text-[15px] font-medium ${testament === "new" ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-[#8e8e93]"}`}
-              >
-                New Testament
-              </button>
+            <div className="flex px-4 py-2.5 gap-2">
+              {(["old", "new"] as const).map((t2) => (
+                <button
+                  key={t2}
+                  onClick={() => setTestament(t2)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    testament === t2 ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg` : `${t.surface} ${t.textSecondary}`
+                  }`}
+                >
+                  {t2 === "old" ? "Old Testament" : "New Testament"}
+                </button>
+              ))}
             </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
+            <div className="px-4 pb-4 overflow-y-auto max-h-[60vh]">
               <div className="grid grid-cols-2 gap-2">
                 {filteredBooks.map((book) => (
                   <button
                     key={book.name}
-                    onClick={() => {
-                      setSelectedBook(book);
-                      setShowChapterPicker(true);
-                    }}
-                    className={`p-3 rounded-lg text-left transition-colors ${selectedBook.name === book.name ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
+                    onClick={() => { setSelectedBook(book); setShowChapterPicker(true); }}
+                    className={`p-3.5 rounded-xl text-left transition-all duration-200 ${
+                      selectedBook.name === book.name
+                        ? `bg-gradient-to-r ${t.bookGradient} text-white shadow-lg`
+                        : `${t.surface} ${t.text} hover:${t.surfaceActive}`
+                    }`}
                   >
-                    <div className="text-[15px] font-medium">
+                    <div className="text-sm font-semibold">
                       {translationView === "amharic" ? book.amharic : book.name}
                     </div>
-                    <div className="text-[13px] opacity-70">
-                      {book.chapters}{" "}
-                      {translationView === "amharic" ? "ክፍሎች" : "chapters"}
+                    <div className={`text-xs mt-0.5 ${selectedBook.name === book.name ? "text-white/70" : theme === "light" ? "text-gray-400" : "text-gray-500"}`}>
+                      {book.chapters} {translationView === "amharic" ? "ክፍሎች" : "chapters"}
                     </div>
                   </button>
                 ))}
@@ -1229,47 +1152,42 @@ export default function Home() {
 
       {/* Chapter Picker */}
       {showChapterPicker && selectedBook && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowChapterPicker(false)}
-          />
-          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[80vh] overflow-hidden animate-slide-up">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowChapterPicker(false)} />
+          <div className={`relative w-full max-w-lg ${t.bgSecondary} backdrop-blur-2xl rounded-t-3xl max-h-[80vh] overflow-hidden animate-slide-up border-t ${t.borderLight}`}>
+            <div className="flex justify-center pt-3 pb-1">
+              <div className={`w-10 h-1 rounded-full ${theme === "light" ? "bg-gray-300" : "bg-white/20"}`} />
+            </div>
+            <div className={`flex items-center justify-between px-5 py-3 border-b ${t.border}`}>
               <button
                 onClick={() => setShowChapterPicker(false)}
-                className="text-[#0a84ff] text-[17px] font-medium"
+                className={`${t.primary} text-sm font-semibold`}
               >
                 Back
               </button>
-              <h2 className="text-white text-[17px] font-semibold">
-                {translationView === "amharic"
-                  ? selectedBook.amharic
-                  : selectedBook.name}
+              <h2 className={`${t.text} text-lg font-bold`}>
+                {translationView === "amharic" ? selectedBook.amharic : selectedBook.name}
               </h2>
               <button
-                onClick={() => setShowChapterPicker(false)}
-                className="text-[#0a84ff] text-[17px] font-medium"
+                onClick={() => { setShowChapterPicker(false); setShowBookPicker(false); }}
+                className={`${t.primary} text-sm font-semibold`}
               >
                 Done
               </button>
             </div>
             <div className="p-4 overflow-y-auto max-h-[70vh]">
               <div className="grid grid-cols-5 gap-2">
-                {Array.from(
-                  { length: selectedBook.chapters },
-                  (_, i) => i + 1,
-                ).map((ch) => (
+                {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((ch) => (
                   <button
                     key={ch}
-                    onClick={() => {
-                      setChapter(ch);
-                      setShowChapterPicker(false);
-                      setShowBookPicker(false);
-                    }}
-                    className={`p-3 rounded-lg text-center transition-colors ${chapter === ch ? "bg-[#0a84ff] text-white" : "bg-[#2c2c2e] text-white/90 hover:bg-[#3a3a3c]"}`}
+                    onClick={() => { setChapter(ch); setShowChapterPicker(false); setShowBookPicker(false); }}
+                    className={`p-3 rounded-xl text-center font-semibold transition-all duration-200 ${
+                      chapter === ch
+                        ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg`
+                        : `${t.surface} ${t.text} hover:${t.surfaceActive}`
+                    }`}
                   >
-                    <div className="text-[15px] font-medium">{ch}</div>
+                    {ch}
                   </button>
                 ))}
               </div>
@@ -1278,41 +1196,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* Compare Modal */}
-      {showCompare && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowCompare(false)}
-          />
-          <div className="relative w-full bg-[#1c1c1e] rounded-t-[20px] max-h-[85vh] overflow-hidden animate-slide-up">
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-[36px] h-[5px] bg-white/20 rounded-full" />
-            </div>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h2 className="text-white text-[17px] font-semibold">
-                Compare Versions
-              </h2>
-              <button
-                onClick={() => setShowCompare(false)}
-                className="text-[#0a84ff] text-[17px] font-medium"
-              >
-                Close
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto">
-              <p className="text-white/50 text-center py-8">
-                English translation coming soon...
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
+      {/* Toast */}
       {toast.visible && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300">
-          <div className="bg-[#1c1c1e] text-white px-4 py-2 rounded-full shadow-lg border border-white/10 text-[14px] font-medium">
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] animate-scale-in">
+          <div className={`${t.bgSecondary} ${t.text} px-5 py-2.5 rounded-2xl shadow-2xl border ${t.borderLight} backdrop-blur-2xl text-sm font-medium`}>
             {toast.message}
           </div>
         </div>

@@ -34,7 +34,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0f172a",
+  themeColor: "#030712",
 };
 
 export default function RootLayout({
@@ -66,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-950 text-white overflow-hidden">
+      <body className="min-h-full flex flex-col overflow-hidden">
         {children}
       </body>
     </html>
