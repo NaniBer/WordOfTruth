@@ -61,7 +61,7 @@ export default function Home() {
   const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [testament, setTestament] = useState<"old" | "new">("old");
-  const [activeTab, setActiveTab] = useState("settings");
+  const [activeTab, setActiveTab] = useState("bible");
   const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">(
     viewSettings.englishVersion,
   );
@@ -518,7 +518,7 @@ export default function Home() {
   };
 
   const renderScreen = () => {
-    if (loading) return <LoadingScreen t={t} />;
+    if (loading && activeTab === "bible") return <LoadingScreen t={t} />;
 
     switch (activeTab) {
       case "saved":
