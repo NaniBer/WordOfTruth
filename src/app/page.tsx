@@ -735,6 +735,8 @@ export default function Home() {
           setActiveTab("bible");
         }}
         translationView={translationView}
+        amharicVersion={amharicVersion}
+        englishVersion={englishVersion}
       />
 
       {/* Toast */}

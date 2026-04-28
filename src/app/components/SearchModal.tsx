@@ -20,33 +20,43 @@ interface SearchModalProps {
   books: Book[];
   onSelectResult: (book: Book, chapter: number, verse: number) => void;
   translationView: "amharic" | "english" | "both";
+  amharicVersion: "amharic_bible" | "amharic_nasb";
+  englishVersion: "niv" | "nlt" | "csb";
 }
 
 // Cache for loaded bible data
-const bibleDataCache: Record<string, { verses: string[]; englishVerses: string[] }> = {};
+const bibleDataCache: Record<string, { chapters: { chapter: string; verses: string[] }[] }> = {};
 
-async function loadChapterData(bookName: string, chapter: number, version: string) {
-  const cacheKey = `${bookName}-${chapter}-${version}`;
+async function loadBookData(bookIndex: number, amharicVersion: string, englishVersion: string) {
+  const cacheKey = `${bookIndex}-${amharicVersion}-${englishVersion}`;
   if (bibleDataCache[cacheKey]) {
     return bibleDataCache[cacheKey];
   }
 
   try {
     const [amharicRes, englishRes] = await Promise.all([
-      fetch(`/bibles/amharic/${bookName}/${chapter}.json`),
-      fetch(`/bibles/english/niv/${bookName}/${chapter}.json`),
+      fetch(`/data/${amharicVersion}/${bookIndex + 1}.json`),
+      fetch(`/data/english/${englishVersion}/${bookIndex + 1}.json`),
     ]);
 
-    if (!amharicRes.ok || !englishRes.ok) return null;
+    if (!amharicRes.ok) return null;
 
     const amharicData = await amharicRes.json();
-    const englishData = await englishRes.json();
+    const englishData = englishRes.ok ? await englishRes.json() : { chapters: [] };
 
-    const data = {
-      verses: amharicData.verses || [],
-      englishVerses: englishData.verses || [],
-    };
+    // Merge data - create array of chapters with both amharic and english verses
+    const chapters = amharicData.chapters.map((ch: any) => {
+      const englishChapter = englishData.chapters?.find(
+        (c: any) => c.chapter === ch.chapter
+      );
+      return {
+        chapter: ch.chapter,
+        verses: ch.verses || [],
+        englishVerses: englishChapter?.verses || [],
+      };
+    });
 
+    const data = { chapters };
     bibleDataCache[cacheKey] = data;
     return data;
   } catch {
@@ -61,6 +71,8 @@ export function SearchModal({
   books,
   onSelectResult,
   translationView,
+  amharicVersion,
+  englishVersion,
 }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -89,17 +101,23 @@ export function SearchModal({
     const searchResults: SearchResult[] = [];
     const lowerQuery = searchQuery.toLowerCase();
 
-    // Search through all books and chapters
-    for (const book of books) {
-      for (let chapter = 1; chapter <= book.chapters; chapter++) {
+    // Search through all books
+    for (let bookIdx = 0; bookIdx < books.length; bookIdx++) {
+      if (abortControllerRef.current.signal.aborted) break;
+      
+      const book = books[bookIdx];
+      const data = await loadBookData(bookIdx, amharicVersion, englishVersion);
+      if (!data) continue;
+
+      // Search through all chapters in this book
+      for (const chapter of data.chapters) {
         if (abortControllerRef.current.signal.aborted) break;
 
-        const data = await loadChapterData(book.name, chapter, "niv");
-        if (!data) continue;
+        const chapterNum = parseInt(chapter.chapter, 10);
 
-        for (let i = 0; i < data.verses.length; i++) {
-          const amharicVerse = data.verses[i] || "";
-          const englishVerse = data.englishVerses[i] || "";
+        for (let verseIdx = 0; verseIdx < chapter.verses.length; verseIdx++) {
+          const amharicVerse = chapter.verses[verseIdx] || "";
+          const englishVerse = chapter.englishVerses[verseIdx] || "";
 
           const matchAmharic = translationView !== "english" && amharicVerse.toLowerCase().includes(lowerQuery);
           const matchEnglish = translationView !== "amharic" && englishVerse.toLowerCase().includes(lowerQuery);
@@ -107,8 +125,8 @@ export function SearchModal({
           if (matchAmharic || matchEnglish) {
             searchResults.push({
               book,
-              chapter,
-              verse: i + 1,
+              chapter: chapterNum,
+              verse: verseIdx + 1,
               amharicText: amharicVerse,
               englishText: englishVerse,
             });
@@ -126,7 +144,7 @@ export function SearchModal({
 
     setResults(searchResults);
     setIsSearching(false);
-  }, [books, translationView]);
+  }, [books, translationView, amharicVersion, englishVersion]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -138,15 +156,9 @@ export function SearchModal({
 
   if (!isOpen) return null;
 
-  const getDisplayText = (result: SearchResult) => {
-    if (translationView === "amharic") return result.amharicText;
-    if (translationView === "english") return result.englishText;
-    return `${result.amharicText}\n${result.englishText}`;
-  };
-
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim()) return text;
-    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === query.toLowerCase() ? (
         <mark key={i} className={`${t.highlightBg[0]} rounded px-0.5`}>
@@ -232,8 +244,10 @@ export function SearchModal({
                         <div className="mb-1">{highlightMatch(result.amharicText, query)}</div>
                         <div className={`${t.textSecondary}`}>{highlightMatch(result.englishText, query)}</div>
                       </>
+                    ) : translationView === "amharic" ? (
+                      highlightMatch(result.amharicText, query)
                     ) : (
-                      highlightMatch(getDisplayText(result), query)
+                      highlightMatch(result.englishText, query)
                     )}
                   </div>
                 </button>
