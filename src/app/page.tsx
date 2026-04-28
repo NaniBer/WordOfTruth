@@ -489,11 +489,11 @@ export default function Home() {
         onClick={() =>
           setSelectedVerse(selectedVerse === verseNum ? null : verseNum)
         }
-        className={`group py-1 px-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+        className={`group py-1 px-2 rounded-2xl transition-all duration-200 cursor-pointer ${
           isSelected ? t.verseSelected : "hover:bg-white/[0.03]"
         } ${highlightIdx !== null ? t.highlightBg[highlightIdx] : ""}`}
       >
-        <div className="flex gap-3">
+        <div className="flex gap-1">
           <span
             className={`verse-number w-8 mt-1 text-sm font-semibold ${isSelected ? t.primary : highlightIdx !== null ? "" : t.textTertiary}`}
             style={
