@@ -1,20 +1,13 @@
 import { RefObject, ReactElement } from "react";
 import { ThemeConfig } from "../../constants/themes";
 import { CustomSelect } from "../CustomSelect";
+import { Book } from "../../types/book";
 
 interface VerseItemProps {
   verse: string;
   index: number;
   versesArray: string[];
   isEnglish?: boolean;
-}
-
-interface Book {
-  name: string;
-  amharic: string;
-  abbr: string;
-  abbrEnglish: string;
-  chapters: number;
 }
 
 interface ReaderViewProps {

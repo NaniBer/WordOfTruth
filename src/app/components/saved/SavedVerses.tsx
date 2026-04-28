@@ -1,13 +1,6 @@
 import { HIGHLIGHT_LABELS } from "@/app/constants/themes";
 import { SavedGroup } from "./SavedGroup";
-
-interface Book {
-  name: string;
-  amharic: string;
-  abbr: string;
-  abbrEnglish: string;
-  chapters: number;
-}
+import { Book } from "@/app/types/book";
 
 interface HighlightData {
   colorIdx: number;

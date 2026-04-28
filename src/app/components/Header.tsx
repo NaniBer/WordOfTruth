@@ -1,14 +1,7 @@
 import { ChevronDown, Search } from "lucide-react";
 import { ThemeConfig } from "../constants/themes";
 import { CustomSelect } from "./CustomSelect";
-
-interface Book {
-  name: string;
-  amharic: string;
-  abbr: string;
-  abbrEnglish: string;
-  chapters: number;
-}
+import { Book } from "../types/book";
 
 interface HeaderProps {
   t: ThemeConfig;
