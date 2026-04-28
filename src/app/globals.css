@@ -3,6 +3,8 @@
 :root {
   --sat: 44px;
   --sab: 34px;
+  --theme-bg: #ffffff;
+  --theme-text: #111827;
 }
 
 @theme inline {
@@ -21,9 +23,14 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+}
+
 body {
-  background: inherit;
-  color: inherit;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
