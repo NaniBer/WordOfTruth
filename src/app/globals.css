@@ -22,8 +22,8 @@
 }
 
 body {
-  background: #030712;
-  color: #f1f5f9;
+  background: inherit;
+  color: inherit;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
