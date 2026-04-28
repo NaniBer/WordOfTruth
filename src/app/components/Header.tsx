@@ -14,6 +14,7 @@ interface HeaderProps {
   setEnglishVersion: (version: "niv" | "nlt" | "csb") => void;
   amharicVersion: "amharic_bible" | "amharic_nasb";
   setAmharicVersion: (version: "amharic_bible" | "amharic_nasb") => void;
+  onSearchClick?: () => void;
 }
 
 export const Header = ({
@@ -27,6 +28,7 @@ export const Header = ({
   setEnglishVersion,
   amharicVersion,
   setAmharicVersion,
+  onSearchClick,
 }: HeaderProps) => {
   return (
     <header
@@ -117,6 +119,7 @@ export const Header = ({
         )}
 
         <button
+          onClick={onSearchClick}
           className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
         >
           <Search className="w-[20px] h-[20px]" />

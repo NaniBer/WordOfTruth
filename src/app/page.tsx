@@ -15,6 +15,7 @@ import { ChapterNavigation } from "./components/ChapterNavigation";
 import { ChapterPickerSheet } from "./components/ChapterPickerSheet";
 import { Toast } from "./components/Toast";
 import { StatusBanner } from "./components/StatusBanner";
+import { SearchModal } from "./components/SearchModal";
 import { cacheBibleData } from "@/utils/cacheBible";
 import {
   HIGHLIGHT_LABELS,
@@ -57,6 +58,7 @@ export default function Home() {
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [testament, setTestament] = useState<"old" | "new">("old");
   const [activeTab, setActiveTab] = useState("bible");
   const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">(
@@ -585,6 +587,7 @@ export default function Home() {
         setEnglishVersion={setEnglishVersion}
         amharicVersion={amharicVersion}
         setAmharicVersion={setAmharicVersion}
+        onSearchClick={() => setShowSearch(true)}
       />
 
       <StatusBanner type="offline" isOnline={isOnline} />
@@ -717,6 +720,21 @@ export default function Home() {
         translationView={translationView}
         theme={theme}
         t={t}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        t={t}
+        books={amharicBooks}
+        onSelectResult={(book, chapterNum, verse) => {
+          setSelectedBook(book);
+          setChapter(chapterNum);
+          setSelectedVerse(verse);
+          setActiveTab("bible");
+        }}
+        translationView={translationView}
       />
 
       {/* Toast */}
