@@ -311,15 +311,39 @@ export default function Home() {
     setMounted(true);
   }, []);
   const [fontSizeIdx, setFontSizeIdx] = useState(1);
-  const [bookmarks, setBookmarks] = useState<{ id: string; bookName: string; bookAmharic: string; chapter: number; verse: number; amharic: string; english: string; timestamp: number }[]>(() => {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("bible-bookmarks");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [highlights, setHighlights] = useState<Record<string, string>>(() => {
+  
+  type HighlightData = {
+    color: string;
+    bookName: string;
+    bookAmharic: string;
+    chapter: number;
+    verse: number;
+    amharic: string;
+    english: string;
+    timestamp: number;
+  };
+
+  const [highlights, setHighlights] = useState<Record<string, HighlightData>>(() => {
     if (typeof window === "undefined") return {};
-    const saved = localStorage.getItem("bible-highlights");
-    return saved ? JSON.parse(saved) : {};
+    const saved = localStorage.getItem("bible-highlights-v2");
+    if (saved) return JSON.parse(saved);
+    // Migrate from old format
+    const oldSaved = localStorage.getItem("bible-highlights");
+    const oldBookmarks = localStorage.getItem("bible-bookmarks");
+    if (oldSaved && oldBookmarks) {
+      const oldHighlights: Record<string, string> = JSON.parse(oldSaved);
+      const oldBookmarksData: Array<{id: string; bookName: string; bookAmharic: string; chapter: number; verse: number; amharic: string; english: string; timestamp: number}> = JSON.parse(oldBookmarks);
+      const migrated: Record<string, HighlightData> = {};
+      Object.entries(oldHighlights).forEach(([id, color]) => {
+        const bookmark = oldBookmarksData.find(b => b.id === id);
+        if (bookmark) {
+          migrated[id] = { color, ...bookmark };
+        }
+      });
+      localStorage.setItem("bible-highlights-v2", JSON.stringify(migrated));
+      return migrated;
+    }
+    return {};
   });
   const amharicScrollRef = useRef<HTMLDivElement>(null);
   const englishScrollRef = useRef<HTMLDivElement>(null);
@@ -466,53 +490,16 @@ export default function Home() {
     }
   };
 
-  const saveBookmark = () => {
-    if (selectedVerse === null) return;
-    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${selectedVerse}`;
-    if (isBookmarked(selectedVerse)) {
-      removeBookmark(id);
-    } else {
-      const bookmark = {
-        id,
-        bookName: selectedBook.name,
-        bookAmharic: selectedBook.amharic,
-        chapter,
-        verse: selectedVerse,
-        amharic: verses[selectedVerse - 1] || "",
-        english: englishVerses[selectedVerse - 1] || "",
-        timestamp: Date.now(),
-      };
-      const updated = [...bookmarks, bookmark];
-      setBookmarks(updated);
-      localStorage.setItem("bible-bookmarks", JSON.stringify(updated));
-    }
-  };
-
-  const removeBookmark = (id: string) => {
-    const updated = bookmarks.filter((b) => b.id !== id);
-    setBookmarks(updated);
-    localStorage.setItem("bible-bookmarks", JSON.stringify(updated));
-  };
-
-  const isBookmarked = (verseNum: number) => {
-    const id = `${selectedBook.name.toLowerCase()}-${chapter}-${verseNum}`;
-    return bookmarks.some((b) => b.id === id);
-  };
-
   const saveHighlight = (color: string | null) => {
     if (selectedVerse === null) return;
     const id = `${selectedBook.name.toLowerCase()}-${chapter}-${selectedVerse}`;
     if (color === null) {
       const { [id]: removed, ...rest } = highlights;
       setHighlights(rest);
-      localStorage.setItem("bible-highlights", JSON.stringify(rest));
-      removeBookmark(id);
+      localStorage.setItem("bible-highlights-v2", JSON.stringify(rest));
     } else {
-      const updated = { ...highlights, [id]: color };
-      setHighlights(updated);
-      localStorage.setItem("bible-highlights", JSON.stringify(updated));
-      const bookmark = {
-        id,
+      const data: HighlightData = {
+        color,
         bookName: selectedBook.name,
         bookAmharic: selectedBook.amharic,
         chapter,
@@ -521,15 +508,21 @@ export default function Home() {
         english: englishVerses[selectedVerse - 1] || "",
         timestamp: Date.now(),
       };
-      const updatedBookmarks = [...bookmarks.filter((b) => b.id !== id), bookmark];
-      setBookmarks(updatedBookmarks);
-      localStorage.setItem("bible-bookmarks", JSON.stringify(updatedBookmarks));
+      const updated = { ...highlights, [id]: data };
+      setHighlights(updated);
+      localStorage.setItem("bible-highlights-v2", JSON.stringify(updated));
     }
   };
 
-  const getHighlight = (verseNum: number) => {
+  const getHighlight = (verseNum: number): string | null => {
     const id = `${selectedBook.name.toLowerCase()}-${chapter}-${verseNum}`;
-    return highlights[id] || null;
+    return highlights[id]?.color || null;
+  };
+
+  const removeHighlight = (id: string) => {
+    const { [id]: removed, ...rest } = highlights;
+    setHighlights(rest);
+    localStorage.setItem("bible-highlights-v2", JSON.stringify(rest));
   };
 
   const copyVerse = async (verseNum: number) => {
@@ -702,23 +695,15 @@ export default function Home() {
           </button>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={(e) => { e.stopPropagation(); copyVerse(verseNum); }}
-          className={`flex-1 py-2.5 rounded-xl ${t.surfaceActive} ${t.primary} text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          Copy
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); saveBookmark(); }}
-          className={`w-10 h-10 rounded-xl ${isBookmarked(verseNum) ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg` : `${t.surfaceActive} ${t.textTertiary}`} flex items-center justify-center transition-all duration-200`}
-        >
-          <Bookmark className="w-4 h-4" fill={isBookmarked(verseNum) ? "currentColor" : "none"} />
-        </button>
-      </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); copyVerse(verseNum); }}
+        className={`w-full py-2.5 rounded-xl ${t.surfaceActive} ${t.primary} text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200`}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        Copy
+      </button>
     </div>
     );
   };
@@ -870,54 +855,76 @@ export default function Home() {
             </div>
           </div>
         ) : activeTab === "saved" ? (
-          <div className="py-4 space-y-3">
+          <div className="py-4 space-y-4">
             <div className={`${t.textSecondary} text-lg font-bold px-1`}>
-              <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}>Saved</span> Verses ({bookmarks.length})
+              <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}>Saved</span> Verses ({Object.keys(highlights).length})
             </div>
-            {bookmarks.length === 0 ? (
+            {Object.keys(highlights).length === 0 ? (
               <div className={`${t.textTertiary} text-center py-16`}>
                 <BookMarked className={`w-12 h-12 mx-auto mb-3 ${t.textTertiary} opacity-30`} />
                 <p className="text-sm">No saved verses yet</p>
-                <p className="text-xs mt-1">Tap a verse to bookmark it</p>
+                <p className="text-xs mt-1">Highlight verses to save them</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {bookmarks
-                  .sort((a, b) => b.timestamp - a.timestamp)
-                  .map((bookmark) => (
-                    <button
-                      key={bookmark.id}
-                      onClick={() => {
-                        const book = amharicBooks.find((b) => b.name === bookmark.bookName);
-                        if (book) {
-                          setSelectedBook(book);
-                          setChapter(bookmark.chapter);
-                          setActiveTab("bible");
-                        }
-                      }}
-                      className={`w-full text-left p-4 rounded-2xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200 backdrop-blur-sm`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent text-sm font-bold`}>
-                          {bookmark.bookAmharic} {bookmark.chapter}:{bookmark.verse}
+              <div className="space-y-4">
+                {/* Group by color */}
+                {highlightColors.map((color, colorIdx) => {
+                  const versesWithColor = Object.values(highlights).filter(h => h.color === color);
+                  if (versesWithColor.length === 0) return null;
+                  return (
+                    <div key={color} className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+                        <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
+                          {HIGHLIGHT_LABELS[colorIdx]} ({versesWithColor.length})
                         </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeBookmark(bookmark.id); }}
-                          className={`${t.textTertiary} hover:text-red-400 text-xs px-2.5 py-1 rounded-lg ${t.surface}`}
-                        >
-                          Remove
-                        </button>
                       </div>
-                      <p className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}>
-                        {bookmark.amharic}
-                      </p>
-                      {bookmark.english && (
-                        <p className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}>
-                          {bookmark.english}
-                        </p>
-                      )}
-                    </button>
-                  ))}
+                      <div className="space-y-2">
+                        {versesWithColor
+                          .sort((a, b) => b.timestamp - a.timestamp)
+                          .map((h) => (
+                            <button
+                              key={`${h.bookName}-${h.chapter}-${h.verse}`}
+                              onClick={() => {
+                                const book = amharicBooks.find((b) => b.name === h.bookName);
+                                if (book) {
+                                  setSelectedBook(book);
+                                  setChapter(h.chapter);
+                                  setActiveTab("bible");
+                                }
+                              }}
+                              className={`w-full text-left p-4 rounded-2xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200 backdrop-blur-sm border-l-4`}
+                              style={{ borderLeftColor: color }}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`${t.text} text-sm font-bold`}>
+                                  {h.bookAmharic} {h.chapter}:{h.verse}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const id = `${h.bookName.toLowerCase()}-${h.chapter}-${h.verse}`;
+                                    removeHighlight(id);
+                                  }}
+                                  className={`${t.textTertiary} hover:text-red-400 text-xs px-2.5 py-1 rounded-lg ${t.surface}`}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                              <p className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}>
+                                {h.amharic}
+                              </p>
+                              {h.english && (
+                                <p className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}>
+                                  {h.english}
+                                </p>
+                              )}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
