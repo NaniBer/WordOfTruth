@@ -116,6 +116,11 @@ export default function Home() {
 
   useEffect(() => {
     localStorage.setItem("bible-theme", theme);
+    const cssVars = THEMES[theme].cssVars;
+    document.documentElement.style.setProperty("--theme-bg", cssVars.bg);
+    document.documentElement.style.setProperty("--theme-text", cssVars.text);
+    const meta = document.getElementById("theme-color-meta");
+    if (meta) meta.setAttribute("content", cssVars.bg);
   }, [theme]);
 
   // Save last location whenever book or chapter changes

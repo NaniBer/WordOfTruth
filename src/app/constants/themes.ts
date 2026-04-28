@@ -3,6 +3,7 @@ export type Theme = "light" | "warm" | "dark" | "midnight" | "amoled" | "ocean";
 export interface ThemeConfig {
   label: string;
   emoji: string;
+  cssVars: { bg: string; text: string };
   bg: string;
   bgSecondary: string;
   bgTertiary: string;
@@ -31,6 +32,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   light: {
     label: "Light",
     emoji: "☀️",
+    cssVars: { bg: "#ffffff", text: "#111827" },
     bg: "from-gray-50 via-white to-gray-100",
     bgSecondary: "bg-white/80",
     bgTertiary: "bg-gray-100/60",
@@ -57,6 +59,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   warm: {
     label: "Warm",
     emoji: "📖",
+    cssVars: { bg: "#faf6f0", text: "#3d3222" },
     bg: "from-[#faf6f0] via-[#f7f0e6] to-[#f3ead9]",
     bgSecondary: "bg-[#f5edd8]/90",
     bgTertiary: "bg-[#ede3c8]/70",
@@ -83,6 +86,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   dark: {
     label: "Dark",
     emoji: "🌙",
+    cssVars: { bg: "#1a1a2e", text: "#e5e7eb" },
     bg: "from-[#1a1a2e] via-[#16213e] to-[#0f0f23]",
     bgSecondary: "bg-[#1e1e36]/90",
     bgTertiary: "bg-[#252545]/70",
@@ -109,6 +113,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   midnight: {
     label: "Midnight",
     emoji: "✨",
+    cssVars: { bg: "#030712", text: "#f3f4f6" },
     bg: "from-[#030712] via-[#0a0e1a] to-[#0f0a1e]",
     bgSecondary: "bg-[#111827]/80",
     bgTertiary: "bg-[#1f2937]/60",
@@ -135,6 +140,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   amoled: {
     label: "AMOLED",
     emoji: "🖤",
+    cssVars: { bg: "#000000", text: "#f3f4f6" },
     bg: "from-black via-black to-black",
     bgSecondary: "bg-black",
     bgTertiary: "bg-[#111]/80",
@@ -161,6 +167,7 @@ export const THEMES: Record<Theme, ThemeConfig> = {
   ocean: {
     label: "Ocean",
     emoji: "🌊",
+    cssVars: { bg: "#0a192f", text: "#f0f9ff" },
     bg: "from-[#0a192f] via-[#0c2340] to-[#071528]",
     bgSecondary: "bg-[#0d2137]/90",
     bgTertiary: "bg-[#122e4f]/70",
