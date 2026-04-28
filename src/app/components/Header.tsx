@@ -15,6 +15,8 @@ interface HeaderProps {
   amharicVersion: "amharic_bible" | "amharic_nasb";
   setAmharicVersion: (version: "amharic_bible" | "amharic_nasb") => void;
   onSearchClick?: () => void;
+  onPrevChapter?: () => void;
+  onNextChapter?: () => void;
 }
 
 export const Header = ({
@@ -29,13 +31,15 @@ export const Header = ({
   amharicVersion,
   setAmharicVersion,
   onSearchClick,
+  onPrevChapter,
+  onNextChapter,
 }: HeaderProps) => {
   return (
     <>
       {/* Main header - book, chapter, search */}
       <header
         className={`relative z-30 flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
-        style={{ paddingTop: 44 }}
+        style={{ paddingTop: 30 }}
       >
         <button
           onClick={() => setShowBookPicker(true)}
@@ -64,8 +68,46 @@ export const Header = ({
         </button>
       </header>
 
+      {/* Chapter Navigation */}
+      {(onPrevChapter || onNextChapter) && (
+        <div
+          className={`flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}
+        >
+          {/* Prev */}
+          <button
+            onClick={onPrevChapter}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
+          >
+            <svg className={`w-4 h-4 ${t.textSecondary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className={`${t.textSecondary} text-sm font-medium`}>Prev</span>
+          </button>
+
+          {/* Center info */}
+          <div className="text-center">
+            <span className={`${t.textTertiary} text-xs`}>
+              Ch. {chapter} / {selectedBook.chapters}
+            </span>
+          </div>
+
+          {/* Next */}
+          <button
+            onClick={onNextChapter}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
+          >
+            <span className={`${t.textSecondary} text-sm font-medium`}>Next</span>
+            <svg className={`w-4 h-4 ${t.textSecondary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Controls row - language selector + version selectors */}
-      <div className={`flex items-center justify-between px-4 py-2 ${t.navBg} border-b ${t.border}`}>
+      <div
+        className={`flex items-center justify-between px-4 py-2 ${t.navBg} border-b ${t.border}`}
+      >
         {/* Language selector */}
         <div
           className={`flex items-center gap-0.5 ${t.bgTertiary} rounded-xl p-1 backdrop-blur-sm`}

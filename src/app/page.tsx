@@ -11,7 +11,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { SavedVersesView } from "./components/saved/SavedVerses";
 import { SettingsView } from "./components/Settings";
 import { ReaderView } from "./components/reader/ReaderView";
-import { ChapterNavigation } from "./components/ChapterNavigation";
+
 import { ChapterPickerSheet } from "./components/ChapterPickerSheet";
 import { Toast } from "./components/Toast";
 import { StatusBanner } from "./components/StatusBanner";
@@ -489,7 +489,7 @@ export default function Home() {
         onClick={() =>
           setSelectedVerse(selectedVerse === verseNum ? null : verseNum)
         }
-        className={`group py-3 px-3 rounded-2xl transition-all duration-200 cursor-pointer ${
+        className={`group py-1 px-3 rounded-2xl transition-all duration-200 cursor-pointer ${
           isSelected ? t.verseSelected : "hover:bg-white/[0.03]"
         } ${highlightIdx !== null ? t.highlightBg[highlightIdx] : ""}`}
       >
@@ -590,23 +590,14 @@ export default function Home() {
           amharicVersion={amharicVersion}
           setAmharicVersion={setAmharicVersion}
           onSearchClick={() => setShowSearch(true)}
+          onPrevChapter={handlePrevChapter}
+          onNextChapter={handleNextChapter}
         />
       )}
 
       <StatusBanner type="offline" isOnline={isOnline} />
 
       <StatusBanner type="caching" message={cachingStatus ?? undefined} />
-
-      {/* Chapter Navigation - only show on Bible tab */}
-      {activeTab === "bible" && (
-        <ChapterNavigation
-          chapter={chapter}
-          totalChapters={selectedBook.chapters}
-          onPrev={handlePrevChapter}
-          onNext={handleNextChapter}
-          t={t}
-        />
-      )}
 
       {/* Bible Content */}
       <main
