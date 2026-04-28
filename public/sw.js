@@ -10,7 +10,6 @@ self.addEventListener('install', (event) => {
         '/',
         '/index.html',
         '/manifest.json',
-        '/sw.js',
       ]).catch(() => {
         // Some files might not exist, that's ok
         console.log('[SW] Some shell files not cached');
@@ -53,40 +52,72 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Strategy: Cache First for navigation requests (HTML pages)
-  // This makes the PWA shell work offline
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        // Return cached shell or fetch new
-        return cachedResponse || fetch(request).catch(() => {
-          // If no cache and no network, return cached root
-          return caches.match('/');
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Network failed, try to return root page from cache
+          return caches.match('/').then((rootResponse) => {
+            if (rootResponse) {
+              return rootResponse;
+            }
+            // If nothing cached, return a simple offline page
+            return new Response(
+              '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Offline</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#1a1a2e;color:#fff;text-align:center;padding:20px}</style></head><body><div><h1>📖 Offline</h1><p>Bible data not cached.</p><p>Please open the app while online first.</p></div></body></html>',
+              { headers: { 'Content-Type': 'text/html' } }
+            );
+          });
         });
       })
     );
     return;
   }
 
-  // Skip external CDN requests (bible data)
+  // Skip external CDN requests
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Strategy: Stale While Revalidate for static assets (JS, CSS, etc.)
+  // Strategy: Stale While Revalidate for static assets
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
+      // Always try to fetch fresh
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
           if (networkResponse.ok) {
-            const cachePromise = caches.open(CACHE_NAME).then((cache) => {
+            // Update cache
+            caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, networkResponse.clone());
             });
             return networkResponse;
           }
-          return cachedResponse;
+          // Network returned error, try cache
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(() => {
+          // Network failed, return cache if available
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // No cache available
+          return new Response('Offline', { status: 503 });
+        });
 
+      // Return cache immediately while fetching in background
       return cachedResponse || fetchPromise;
     })
   );
