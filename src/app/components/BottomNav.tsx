@@ -11,9 +11,9 @@ export const BottomNav = ({ activeTab, setActiveTab, t }: BottomNavProps) => {
   return (
     <nav className={`${t.navBg} backdrop-blur-2xl border-t ${t.border}`}>
       <div
-        className="flex items-center justify-around px-4 pt-2 pb-1"
+        className="flex items-center justify-around px-4 pt-1 pb-1"
         style={{
-          paddingBottom: "calc(4px + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "calc(2px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {NAV_ITEMS.map(({ id, icon: Icon, label }) => (

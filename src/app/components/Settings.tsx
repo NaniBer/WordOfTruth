@@ -26,7 +26,7 @@ export function SettingsView({
   isCached = false,
 }: SettingsProps) {
   return (
-    <div className="py-12 px-1 space-y-4">
+    <div className="py-6 px-1 space-y-4">
       {/* Header */}
       <div className={`text-lg font-bold ${t.text}`}>
         <span
