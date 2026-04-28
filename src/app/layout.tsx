@@ -56,17 +56,19 @@ export default function RootLayout({
                 try {
                   var savedTheme = localStorage.getItem('bible-theme');
                   var themeData = {
-                    'light': { color: '#ffffff', bg: 'from-gray-50 via-white to-gray-100' },
-                    'warm': { color: '#faf6f0', bg: 'from-[#faf6f0] via-[#f7f0e6] to-[#f3ead9]' },
-                    'dark': { color: '#1a1a2e', bg: 'from-[#1a1a2e] via-[#16213e] to-[#0f0f23]' },
-                    'midnight': { color: '#030712', bg: 'from-[#030712] via-[#0a0e1a] to-[#0f0a1e]' },
-                    'amoled': { color: '#000000', bg: 'from-black via-black to-black' },
-                    'ocean': { color: '#0a192f', bg: 'from-[#0a192f] via-[#0c2340] to-[#071528]' }
+                    'light': { color: '#ffffff', bg: 'from-gray-50 via-white to-gray-100', text: '#111827' },
+                    'warm': { color: '#faf6f0', bg: 'from-[#faf6f0] via-[#f7f0e6] to-[#f3ead9]', text: '#3d3222' },
+                    'dark': { color: '#1a1a2e', bg: 'from-[#1a1a2e] via-[#16213e] to-[#0f0f23]', text: '#e5e7eb' },
+                    'midnight': { color: '#030712', bg: 'from-[#030712] via-[#0a0e1a] to-[#0f0a1e]', text: '#f3f4f6' },
+                    'amoled': { color: '#000000', bg: 'from-black via-black to-black', text: '#f3f4f6' },
+                    'ocean': { color: '#0a192f', bg: 'from-[#0a192f] via-[#0c2340] to-[#071528]', text: '#f0f9ff' }
                   };
                   var theme = themeData[savedTheme] || themeData['light'];
                   
-                  // Set document background immediately
+                  // Set document and body background immediately
                   document.documentElement.style.backgroundColor = theme.color;
+                  document.body.style.backgroundColor = theme.color;
+                  document.body.style.color = theme.text;
                   
                   // Add theme gradient class to html element immediately
                   document.documentElement.classList.add('bg-gradient-to-b');
