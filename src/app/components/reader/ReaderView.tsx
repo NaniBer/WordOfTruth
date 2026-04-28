@@ -77,7 +77,7 @@ export function ReaderView({
         className="flex-1 overflow-y-auto rounded-2xl"
       >
         <div
-          className={`sticky top-0 z-10 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
+          className={`sticky top-0 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
         >
           <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
             Amharic
@@ -103,7 +103,7 @@ export function ReaderView({
         className="flex-1 overflow-y-auto rounded-2xl"
       >
         <div
-          className={`sticky top-0 z-10 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
+          className={`sticky top-0 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
         >
           {selectedBook ? (
             <span className={`${t.text} text-sm font-bold`}>
