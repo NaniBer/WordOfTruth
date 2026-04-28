@@ -200,8 +200,8 @@ export default function Home() {
     cacheBibleData({
       setStatus: (msg) => {
         setCachingStatus(msg);
-        // If caching is complete (success message), mark as cached
-        if (msg && msg.includes('Cached') && msg.includes('files')) {
+        // If caching is complete (final success message without "..."), mark as cached
+        if (msg && msg.includes('Cached') && msg.includes('files') && !msg.includes('...')) {
           setIsDataCached(true);
         }
       },
