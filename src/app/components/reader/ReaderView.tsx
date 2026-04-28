@@ -70,25 +70,6 @@ export function ReaderView({
         ref={amharicScrollRef}
         className="flex-1 overflow-y-auto rounded-2xl"
       >
-        <div
-          className={`sticky top-0 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
-        >
-          <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
-            Amharic
-          </span>
-          {setAmharicVersion && (
-            <CustomSelect
-              value={amharicVersion}
-              options={[
-                { value: "amharic_bible", label: "Haile Selassie" },
-                { value: "amharic_nasb", label: "NASB" },
-              ]}
-              onChange={(value) => setAmharicVersion(value as "amharic_bible" | "amharic_nasb")}
-              t={t}
-              minWidth="90px"
-            />
-          )}
-        </div>
         {renderVerses(verses)}
       </div>
 
@@ -104,7 +85,9 @@ export function ReaderView({
               {selectedBook.abbrEnglish}
             </span>
           ) : (
-            <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
+            <span
+              className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}
+            >
               English
             </span>
           )}
@@ -116,7 +99,9 @@ export function ReaderView({
                 { value: "nlt", label: "NLT" },
                 { value: "csb", label: "CSB" },
               ]}
-              onChange={(value) => setEnglishVersion(value as "niv" | "nlt" | "csb")}
+              onChange={(value) =>
+                setEnglishVersion(value as "niv" | "nlt" | "csb")
+              }
               t={t}
               minWidth="60px"
             />
