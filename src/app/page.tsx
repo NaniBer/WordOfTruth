@@ -555,6 +555,9 @@ export default function Home() {
             englishVerses={englishVerses}
             shouldShowVerse={shouldShowVerse}
             englishVersion={englishVersion}
+            setEnglishVersion={setEnglishVersion}
+            amharicVersion={amharicVersion}
+            setAmharicVersion={setAmharicVersion}
             t={t}
             amharicScrollRef={amharicScrollRef}
             englishScrollRef={englishScrollRef}
