@@ -24,20 +24,35 @@ import {
   createHighlightData,
   getHighlightColorIdx,
   removeHighlightById,
+  type HighlightData,
   type HighlightsMap,
 } from "@/utils/highlights";
+import {
+  saveLastLocation,
+  loadLastLocation,
+} from "@/utils/lastLocation";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
 export default function Home() {
-  const [selectedBook, setSelectedBook] = useState(
-    amharicBooks[0] || {
-      name: "Genesis",
-      amharic: "ኦሪት ዘፍጥረት",
-      abbr: "ዘፍ",
-      chapters: 50,
-    },
-  );
-  const [chapter, setChapter] = useState(1);
+  const [selectedBook, setSelectedBook] = useState(() => {
+    const lastLocation = loadLastLocation();
+    if (lastLocation) {
+      const book = amharicBooks.find((b) => b.name === lastLocation.bookName);
+      if (book) return book;
+    }
+    return (
+      amharicBooks[0] || {
+        name: "Genesis",
+        amharic: "ኦሪት ዘፍጥረት",
+        abbr: "ዘፍ",
+        chapters: 50,
+      }
+    );
+  });
+  const [chapter, setChapter] = useState(() => {
+    const lastLocation = loadLastLocation();
+    return lastLocation?.chapter ?? 1;
+  });
   const [verses, setVerses] = useState<string[]>([]);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [showBookPicker, setShowBookPicker] = useState(false);
@@ -97,6 +112,11 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem("bible-theme", theme);
   }, [theme]);
+
+  // Save last location whenever book or chapter changes
+  useEffect(() => {
+    saveLastLocation(selectedBook.name, chapter);
+  }, [selectedBook.name, chapter]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
