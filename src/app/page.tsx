@@ -86,7 +86,10 @@ export default function Home() {
   });
   const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
 
-  const [highlights, setHighlights] = useState<HighlightsMap>(loadHighlights);
+  const [highlights, setHighlights] = useState<HighlightsMap>(() => {
+    if (typeof window === "undefined") return {};
+    return loadHighlights();
+  });
   const amharicScrollRef = useRef<HTMLDivElement>(null);
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
