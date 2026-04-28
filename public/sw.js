@@ -1,16 +1,20 @@
 // Service Worker for Word of Truth Bible PWA
-const CACHE_NAME = 'wordoftruth-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
+const CACHE_NAME = 'wordoftruth-v2';
 
-// Install event - cache static assets
+// Install event - cache critical shell files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      // Cache the app shell - these are the minimum files needed for offline
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.json',
+        '/sw.js',
+      ]).catch(() => {
+        // Some files might not exist, that's ok
+        console.log('[SW] Some shell files not cached');
+      });
     })
   );
   self.skipWaiting();
@@ -23,6 +27,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -47,13 +52,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip external CDN requests (don't cache bible data from external source)
-  // Only cache same-origin requests
+  // Strategy: Cache First for navigation requests (HTML pages)
+  // This makes the PWA shell work offline
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        // Return cached shell or fetch new
+        return cachedResponse || fetch(request).catch(() => {
+          // If no cache and no network, return cached root
+          return caches.match('/');
+        });
+      })
+    );
+    return;
+  }
+
+  // Skip external CDN requests (bible data)
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Strategy: Stale While Revalidate for static assets
+  // Strategy: Stale While Revalidate for static assets (JS, CSS, etc.)
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request)
