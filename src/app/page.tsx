@@ -313,7 +313,7 @@ export default function Home() {
   const [fontSizeIdx, setFontSizeIdx] = useState(1);
   
   type HighlightData = {
-    color: string;
+    colorIdx: number;
     bookName: string;
     bookAmharic: string;
     chapter: number;
@@ -325,22 +325,27 @@ export default function Home() {
 
   const [highlights, setHighlights] = useState<Record<string, HighlightData>>(() => {
     if (typeof window === "undefined") return {};
-    const saved = localStorage.getItem("bible-highlights-v2");
+    const saved = localStorage.getItem("bible-highlights-v3");
     if (saved) return JSON.parse(saved);
-    // Migrate from old format
-    const oldSaved = localStorage.getItem("bible-highlights");
-    const oldBookmarks = localStorage.getItem("bible-bookmarks");
-    if (oldSaved && oldBookmarks) {
-      const oldHighlights: Record<string, string> = JSON.parse(oldSaved);
-      const oldBookmarksData: Array<{id: string; bookName: string; bookAmharic: string; chapter: number; verse: number; amharic: string; english: string; timestamp: number}> = JSON.parse(oldBookmarks);
+    // Migrate from v2 format (stored color hex, now store index)
+    const v2Saved = localStorage.getItem("bible-highlights-v2");
+    if (v2Saved) {
+      const v2Data: Record<string, {color: string; bookName: string; bookAmharic: string; chapter: number; verse: number; amharic: string; english: string; timestamp: number}> = JSON.parse(v2Saved);
       const migrated: Record<string, HighlightData> = {};
-      Object.entries(oldHighlights).forEach(([id, color]) => {
-        const bookmark = oldBookmarksData.find(b => b.id === id);
-        if (bookmark) {
-          migrated[id] = { color, ...bookmark };
-        }
+      // Map theme colors to indices - simplified mapping (first color of each theme per index)
+      const colorToIdx: Record<string, number> = {
+        // Faith (index 0) - blues/purples
+        "#6366f1": 0, "#b8860b": 0, "#a78bfa": 0, "#818cf8": 0, "#22d3ee": 0, "#2dd4bf": 0,
+        // Hope (index 1) - oranges/amber
+        "#f59e0b": 1, "#c05621": 1, "#fbbf24": 1, "#fb923c": 1,
+        // Love (index 2) - greens
+        "#10b981": 2, "#2d6a4f": 2, "#34d399": 2, "#6ee7b7": 2,
+      };
+      Object.entries(v2Data).forEach(([id, data]) => {
+        const colorIdx = colorToIdx[data.color] ?? 0;
+        migrated[id] = { colorIdx, bookName: data.bookName, bookAmharic: data.bookAmharic, chapter: data.chapter, verse: data.verse, amharic: data.amharic, english: data.english, timestamp: data.timestamp };
       });
-      localStorage.setItem("bible-highlights-v2", JSON.stringify(migrated));
+      localStorage.setItem("bible-highlights-v3", JSON.stringify(migrated));
       return migrated;
     }
     return {};
@@ -490,16 +495,16 @@ export default function Home() {
     }
   };
 
-  const saveHighlight = (color: string | null) => {
+  const saveHighlight = (colorIdx: number | null) => {
     if (selectedVerse === null) return;
     const id = `${selectedBook.name.toLowerCase()}-${chapter}-${selectedVerse}`;
-    if (color === null) {
+    if (colorIdx === null) {
       const { [id]: removed, ...rest } = highlights;
       setHighlights(rest);
-      localStorage.setItem("bible-highlights-v2", JSON.stringify(rest));
+      localStorage.setItem("bible-highlights-v3", JSON.stringify(rest));
     } else {
       const data: HighlightData = {
-        color,
+        colorIdx,
         bookName: selectedBook.name,
         bookAmharic: selectedBook.amharic,
         chapter,
@@ -510,19 +515,19 @@ export default function Home() {
       };
       const updated = { ...highlights, [id]: data };
       setHighlights(updated);
-      localStorage.setItem("bible-highlights-v2", JSON.stringify(updated));
+      localStorage.setItem("bible-highlights-v3", JSON.stringify(updated));
     }
   };
 
-  const getHighlight = (verseNum: number): string | null => {
+  const getHighlightIdx = (verseNum: number): number | null => {
     const id = `${selectedBook.name.toLowerCase()}-${chapter}-${verseNum}`;
-    return highlights[id]?.color || null;
+    return highlights[id]?.colorIdx ?? null;
   };
 
   const removeHighlight = (id: string) => {
     const { [id]: removed, ...rest } = highlights;
     setHighlights(rest);
-    localStorage.setItem("bible-highlights-v2", JSON.stringify(rest));
+    localStorage.setItem("bible-highlights-v3", JSON.stringify(rest));
   };
 
   const copyVerse = async (verseNum: number) => {
@@ -665,28 +670,28 @@ export default function Home() {
   const HIGHLIGHT_LABELS = ["Faith", "Hope", "Love"] as const;
 
   const VerseActions = ({ verseNum }: { verseNum: number }) => {
-    const currentHighlight = getHighlight(verseNum);
+    const currentHighlightIdx = getHighlightIdx(verseNum);
     return (
     <div className="mt-3 pt-3 border-t border-white/[0.08] flex flex-col gap-2">
       <div className="flex items-center gap-2">
         {highlightColors.map((color, i) => (
           <button
-            key={color}
-            onClick={(e) => { e.stopPropagation(); saveHighlight(color); }}
+            key={i}
+            onClick={(e) => { e.stopPropagation(); saveHighlight(i); }}
             className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 ${
-              currentHighlight === color
+              currentHighlightIdx === i
                 ? "ring-2 ring-offset-1 text-white shadow-md ring-offset-transparent"
                 : `${t.surfaceActive} ${t.textSecondary}`
             }`}
-            style={currentHighlight === color
+            style={currentHighlightIdx === i
               ? { backgroundColor: color, boxShadow: `0 0 0 2px ${color}, 0 0 0 4px transparent` }
               : {}}
           >
-            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: currentHighlight === color ? "white" : color }} />
+            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: currentHighlightIdx === i ? "white" : color }} />
             {HIGHLIGHT_LABELS[i]}
           </button>
         ))}
-        {currentHighlight && (
+        {currentHighlightIdx !== null && (
           <button
             onClick={(e) => { e.stopPropagation(); saveHighlight(null); }}
             className={`px-3 py-2 rounded-xl ${t.surfaceActive} ${t.textTertiary} text-xs font-semibold transition-all`}
@@ -710,10 +715,9 @@ export default function Home() {
 
   const VerseItem = ({ verse, index, versesArray, isEnglish }: { verse: string; index: number; versesArray: string[]; isEnglish?: boolean }) => {
     const verseNum = index + 1;
-    const highlight = getHighlight(verseNum);
+    const highlightIdx = getHighlightIdx(verseNum);
     const isSelected = selectedVerse === verseNum;
     const label = isEnglish ? (verseNum).toString() : getVerseLabel(versesArray, index);
-    const highlightIdx = highlight ? highlightColors.indexOf(highlight) : -1;
 
     return (
       <div
@@ -721,11 +725,11 @@ export default function Home() {
         onClick={() => setSelectedVerse(selectedVerse === verseNum ? null : verseNum)}
         className={`group py-3 px-3 rounded-2xl transition-all duration-200 cursor-pointer ${
           isSelected ? t.verseSelected : "hover:bg-white/[0.03]"
-        } ${highlight && highlightIdx >= 0 ? t.highlightBg[highlightIdx] : ""}`}
+        } ${highlightIdx !== null ? t.highlightBg[highlightIdx] : ""}`}
       >
         <div className="flex gap-3">
-          <span className={`verse-number w-8 mt-1 text-sm font-semibold ${isSelected ? t.primary : highlight && highlightIdx >= 0 ? "" : t.textTertiary}`}
-            style={highlight && highlightIdx >= 0 ? { color: highlightColors[highlightIdx] } : undefined}
+          <span className={`verse-number w-8 mt-1 text-sm font-semibold ${isSelected ? t.primary : highlightIdx !== null ? "" : t.textTertiary}`}
+            style={highlightIdx !== null ? { color: highlightColors[highlightIdx] } : undefined}
           >
             {label}
           </span>
@@ -867,12 +871,13 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Group by color */}
-                {highlightColors.map((color, colorIdx) => {
-                  const versesWithColor = Object.values(highlights).filter(h => h.color === color);
+                {/* Group by color index */}
+                {[0, 1, 2].map((colorIdx) => {
+                  const color = highlightColors[colorIdx];
+                  const versesWithColor = Object.values(highlights).filter(h => h.colorIdx === colorIdx);
                   if (versesWithColor.length === 0) return null;
                   return (
-                    <div key={color} className="space-y-2">
+                    <div key={colorIdx} className="space-y-2">
                       <div className="flex items-center gap-2 px-1">
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                         <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
