@@ -85,7 +85,7 @@ export function ReaderView({
             <select
               value={amharicVersion}
               onChange={(e) => setAmharicVersion(e.target.value as "amharic_bible" | "amharic_nasb")}
-              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1 border-none outline-none backdrop-blur-sm cursor-pointer`}
+              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm cursor-pointer hover:opacity-80 transition-opacity min-w-[70px]`}
             >
               <option value="amharic_bible">Haile Selassie</option>
               <option value="amharic_nasb">NASB</option>
@@ -115,7 +115,7 @@ export function ReaderView({
             <select
               value={englishVersion}
               onChange={(e) => setEnglishVersion(e.target.value as "niv" | "nlt" | "csb")}
-              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1 border-none outline-none backdrop-blur-sm cursor-pointer`}
+              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm cursor-pointer hover:opacity-80 transition-opacity min-w-[50px]`}
             >
               <option value="niv">NIV</option>
               <option value="nlt">NLT</option>
