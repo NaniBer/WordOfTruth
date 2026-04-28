@@ -296,6 +296,8 @@ We welcome contributions! Here's how to get started:
 Made with ❤️ for personal Bible study and the Ethiopian community.
 
 Special thanks to:
+- **[Beblia/Holy-Bible-XML-Format](https://github.com/Beblia/Holy-Bible-XML-Format/tree/master)** - For providing the Amharic Bible translations used in this project
+- **[dagmawibabi/mybible](https://github.com/dagmawibabi/mybible)** - For the inspiration and motivation to build this app
 - Ethiopian Orthodox Tewahedo Church for the Haile Selassie 1954 translation
 - Bible societies for English translations
 - Contributors and testers
