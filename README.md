@@ -230,6 +230,8 @@ You can obtain Bible translations from:
 - [x] **External CDN** - Host Bible data separately
 
 ### 🔄 Future Ideas
+- [ ] **True Offline Mode** - Improve offline reliability with better data persistence
+- [ ] **Native App** - Wrap as iOS/Android app using Capacitor or React Native
 - [ ] Reading plans / devotionals
 - [ ] Audio narration / text-to-speech
 - [ ] Verse notes / personal comments
@@ -298,7 +300,6 @@ Made with ❤️ for personal Bible study and the Ethiopian community.
 Special thanks to:
 - **[Beblia/Holy-Bible-XML-Format](https://github.com/Beblia/Holy-Bible-XML-Format/tree/master)** - For providing all the Bible translations used in this project
 - **[dagmawibabi/mybible](https://github.com/dagmawibabi/mybible)** - For the inspiration and motivation to build this app
-- Ethiopian Orthodox Tewahedo Church for the Haile Selassie 1954 translation
 - Bible societies for English translations
 - Contributors and testers
 
