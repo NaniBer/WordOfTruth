@@ -576,33 +576,37 @@ export default function Home() {
     <div
       className={`flex flex-col h-screen bg-gradient-to-b ${t.bg} transition-colors duration-500`}
     >
-      {/* Header */}
-      <Header
-        t={t}
-        selectedBook={selectedBook}
-        chapter={chapter}
-        translationView={translationView}
-        setTranslationView={setTranslationView}
-        setShowBookPicker={setShowBookPicker}
-        englishVersion={englishVersion}
-        setEnglishVersion={setEnglishVersion}
-        amharicVersion={amharicVersion}
-        setAmharicVersion={setAmharicVersion}
-        onSearchClick={() => setShowSearch(true)}
-      />
+      {/* Header - only show on Bible tab */}
+      {activeTab === "bible" && (
+        <Header
+          t={t}
+          selectedBook={selectedBook}
+          chapter={chapter}
+          translationView={translationView}
+          setTranslationView={setTranslationView}
+          setShowBookPicker={setShowBookPicker}
+          englishVersion={englishVersion}
+          setEnglishVersion={setEnglishVersion}
+          amharicVersion={amharicVersion}
+          setAmharicVersion={setAmharicVersion}
+          onSearchClick={() => setShowSearch(true)}
+        />
+      )}
 
       <StatusBanner type="offline" isOnline={isOnline} />
 
       <StatusBanner type="caching" message={cachingStatus ?? undefined} />
 
-      {/* Chapter Navigation */}
-      <ChapterNavigation
-        chapter={chapter}
-        totalChapters={selectedBook.chapters}
-        onPrev={handlePrevChapter}
-        onNext={handleNextChapter}
-        t={t}
-      />
+      {/* Chapter Navigation - only show on Bible tab */}
+      {activeTab === "bible" && (
+        <ChapterNavigation
+          chapter={chapter}
+          totalChapters={selectedBook.chapters}
+          onPrev={handlePrevChapter}
+          onNext={handleNextChapter}
+          t={t}
+        />
+      )}
 
       {/* Bible Content */}
       <main
