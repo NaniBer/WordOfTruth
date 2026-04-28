@@ -24,7 +24,7 @@ export function SettingsView({
   t,
 }: SettingsProps) {
   return (
-    <div className="py-4 px-1 space-y-4">
+    <div className="py-8 px-1 space-y-4">
       {/* Header */}
       <div className={`text-lg font-bold ${t.text}`}>
         <span

@@ -43,7 +43,7 @@ export function SavedVersesView({
   const saved = Object.values(highlights);
 
   return (
-    <div className="py-4 space-y-4">
+    <div className="py-8 space-y-4">
       <div className={`${t.textSecondary} text-lg font-bold px-1`}>
         <span
           className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}
