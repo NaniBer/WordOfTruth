@@ -51,6 +51,23 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Load theme immediately to prevent flash
+              (function() {
+                var savedTheme = localStorage.getItem('bible-theme');
+                var themeColors = {
+                  'light': '#ffffff',
+                  'warm': '#faf6f0',
+                  'dark': '#1a1a2e',
+                  'midnight': '#030712',
+                  'amoled': '#000000',
+                  'ocean': '#0a192f'
+                };
+                var color = themeColors[savedTheme] || '#ffffff';
+                document.documentElement.style.backgroundColor = color;
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', color);
+              })();
+              
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js');
