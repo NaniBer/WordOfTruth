@@ -44,11 +44,9 @@ export const Header = ({
       >
         <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
           <span className={`text-base font-bold ${t.text}`}>
-            {translationView === "amharic"
-              ? selectedBook.abbr || selectedBook.amharic.slice(0, 4)
-              : translationView === "english"
-                ? selectedBook.name
-                : `${selectedBook.abbr || selectedBook.amharic.slice(0, 4)} / ${selectedBook.name}`}
+            {translationView === "english"
+              ? selectedBook.name
+              : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
           </span>
         </div>
 
@@ -78,7 +76,7 @@ export const Header = ({
           ))}
         </div>
 
-        {(translationView === "english" || translationView === "both") && (
+        {translationView === "english" && (
           <select
             value={englishVersion}
             onChange={(e) =>
@@ -92,7 +90,7 @@ export const Header = ({
           </select>
         )}
 
-        {(translationView === "amharic" || translationView === "both") && (
+        {translationView === "amharic" && (
           <select
             value={amharicVersion}
             onChange={(e) =>

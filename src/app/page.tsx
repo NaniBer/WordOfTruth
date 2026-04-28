@@ -562,6 +562,7 @@ export default function Home() {
             amharicScrollRef={amharicScrollRef}
             englishScrollRef={englishScrollRef}
             VerseItem={VerseItem}
+            selectedBook={selectedBook}
           />
         );
     }

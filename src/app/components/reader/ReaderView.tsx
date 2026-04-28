@@ -8,6 +8,13 @@ interface VerseItemProps {
   isEnglish?: boolean;
 }
 
+interface Book {
+  name: string;
+  amharic: string;
+  abbr: string;
+  chapters: number;
+}
+
 interface ReaderViewProps {
   translationView: "amharic" | "english" | "both";
   verses: string[];
@@ -21,6 +28,7 @@ interface ReaderViewProps {
   amharicScrollRef: RefObject<HTMLDivElement | null>;
   englishScrollRef: RefObject<HTMLDivElement | null>;
   VerseItem: (props: VerseItemProps) => ReactElement;
+  selectedBook?: Book;
 }
 
 export function ReaderView({
@@ -36,6 +44,7 @@ export function ReaderView({
   amharicScrollRef,
   englishScrollRef,
   VerseItem,
+  selectedBook,
 }: ReaderViewProps) {
   const renderVerses = (data: string[], isEnglish?: boolean) => (
     <div className="space-y-1 py-1">
@@ -93,9 +102,15 @@ export function ReaderView({
         <div
           className={`sticky top-0 z-10 ${t.bgSecondary} border-b ${t.border} px-4 py-2 flex items-center justify-between`}
         >
-          <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
-            English
-          </span>
+          {selectedBook ? (
+            <span className={`${t.text} text-sm font-bold`}>
+              {selectedBook.name}
+            </span>
+          ) : (
+            <span className={`${t.textSecondary} text-xs font-semibold uppercase tracking-wide`}>
+              English
+            </span>
+          )}
           {setEnglishVersion && (
             <select
               value={englishVersion}
