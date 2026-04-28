@@ -61,7 +61,7 @@ export default function Home() {
   const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [testament, setTestament] = useState<"old" | "new">("old");
-  const [activeTab, setActiveTab] = useState("bible");
+  const [activeTab, setActiveTab] = useState("settings");
   const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">(
     viewSettings.englishVersion,
   );
