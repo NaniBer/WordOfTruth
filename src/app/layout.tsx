@@ -34,7 +34,6 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#030712",
 };
 
 export default function RootLayout({
@@ -48,24 +47,42 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               // Load theme immediately to prevent flash
               (function() {
-                var savedTheme = localStorage.getItem('bible-theme');
-                var themeColors = {
-                  'light': '#ffffff',
-                  'warm': '#faf6f0',
-                  'dark': '#1a1a2e',
-                  'midnight': '#030712',
-                  'amoled': '#000000',
-                  'ocean': '#0a192f'
-                };
-                var color = themeColors[savedTheme] || '#ffffff';
-                document.documentElement.style.backgroundColor = color;
-                var meta = document.querySelector('meta[name="theme-color"]');
-                if (meta) meta.setAttribute('content', color);
+                try {
+                  var savedTheme = localStorage.getItem('bible-theme');
+                  var themeColors = {
+                    'light': '#ffffff',
+                    'warm': '#faf6f0',
+                    'dark': '#1a1a2e',
+                    'midnight': '#030712',
+                    'amoled': '#000000',
+                    'ocean': '#0a192f'
+                  };
+                  var color = themeColors[savedTheme] || '#ffffff';
+                  
+                  // Set document background immediately
+                  document.documentElement.style.backgroundColor = color;
+                  document.body.style.backgroundColor = color;
+                  
+                  // Update or create theme-color meta tag
+                  var meta = document.getElementById('theme-color-meta');
+                  if (meta) {
+                    meta.setAttribute('content', color);
+                  }
+                  
+                  // Also try to update any existing meta[name="theme-color"]
+                  var metas = document.querySelectorAll('meta[name="theme-color"]');
+                  for (var i = 0; i < metas.length; i++) {
+                    metas[i].setAttribute('content', color);
+                  }
+                } catch (e) {
+                  // Silent fail - don't break the app
+                }
               })();
               
               if ('serviceWorker' in navigator) {
