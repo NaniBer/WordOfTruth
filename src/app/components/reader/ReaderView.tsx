@@ -1,5 +1,6 @@
 import { RefObject, ReactElement } from "react";
 import { ThemeConfig } from "../../constants/themes";
+import { CustomSelect } from "../CustomSelect";
 
 interface VerseItemProps {
   verse: string;
@@ -82,14 +83,16 @@ export function ReaderView({
             Amharic
           </span>
           {setAmharicVersion && (
-            <select
+            <CustomSelect
               value={amharicVersion}
-              onChange={(e) => setAmharicVersion(e.target.value as "amharic_bible" | "amharic_nasb")}
-              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm cursor-pointer hover:opacity-80 transition-opacity min-w-[70px]`}
-            >
-              <option value="amharic_bible">Haile Selassie</option>
-              <option value="amharic_nasb">NASB</option>
-            </select>
+              options={[
+                { value: "amharic_bible", label: "Haile Selassie" },
+                { value: "amharic_nasb", label: "NASB" },
+              ]}
+              onChange={(value) => setAmharicVersion(value as "amharic_bible" | "amharic_nasb")}
+              t={t}
+              minWidth="90px"
+            />
           )}
         </div>
         {renderVerses(verses)}
@@ -112,15 +115,17 @@ export function ReaderView({
             </span>
           )}
           {setEnglishVersion && (
-            <select
+            <CustomSelect
               value={englishVersion}
-              onChange={(e) => setEnglishVersion(e.target.value as "niv" | "nlt" | "csb")}
-              className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm cursor-pointer hover:opacity-80 transition-opacity min-w-[50px]`}
-            >
-              <option value="niv">NIV</option>
-              <option value="nlt">NLT</option>
-              <option value="csb">CSB</option>
-            </select>
+              options={[
+                { value: "niv", label: "NIV" },
+                { value: "nlt", label: "NLT" },
+                { value: "csb", label: "CSB" },
+              ]}
+              onChange={(value) => setEnglishVersion(value as "niv" | "nlt" | "csb")}
+              t={t}
+              minWidth="60px"
+            />
           )}
         </div>
         {renderVerses(englishVerses, true)}

@@ -1,5 +1,6 @@
 import { ChevronDown, Search } from "lucide-react";
 import { ThemeConfig } from "../constants/themes";
+import { CustomSelect } from "./CustomSelect";
 
 interface Book {
   name: string;
@@ -77,32 +78,30 @@ export const Header = ({
         </div>
 
         {translationView === "english" && (
-          <select
+          <CustomSelect
             value={englishVersion}
-            onChange={(e) =>
-              setEnglishVersion(e.target.value as "niv" | "nlt" | "csb")
-            }
-            className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm`}
-          >
-            <option value="niv">NIV</option>
-            <option value="nlt">NLT</option>
-            <option value="csb">CSB</option>
-          </select>
+            options={[
+              { value: "niv", label: "NIV" },
+              { value: "nlt", label: "NLT" },
+              { value: "csb", label: "CSB" },
+            ]}
+            onChange={(value) => setEnglishVersion(value as "niv" | "nlt" | "csb")}
+            t={t}
+            minWidth="60px"
+          />
         )}
 
         {translationView === "amharic" && (
-          <select
+          <CustomSelect
             value={amharicVersion}
-            onChange={(e) =>
-              setAmharicVersion(
-                e.target.value as "amharic_bible" | "amharic_nasb",
-              )
-            }
-            className={`${t.bgTertiary} ${t.text} text-xs rounded-lg px-2 py-1.5 border-none outline-none backdrop-blur-sm`}
-          >
-            <option value="amharic_bible">Haile Selassie</option>
-            <option value="amharic_nasb">NASB</option>
-          </select>
+            options={[
+              { value: "amharic_bible", label: "Haile Selassie" },
+              { value: "amharic_nasb", label: "NASB" },
+            ]}
+            onChange={(value) => setAmharicVersion(value as "amharic_bible" | "amharic_nasb")}
+            t={t}
+            minWidth="90px"
+          />
         )}
 
         <button
