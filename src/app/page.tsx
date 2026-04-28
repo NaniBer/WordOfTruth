@@ -77,16 +77,13 @@ export default function Home() {
     "amharic" | "english" | "both"
   >(viewSettings.translationView);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
+  // Load theme synchronously to prevent flash
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "light";
     const saved = localStorage.getItem("bible-theme") as Theme | null;
-    if (saved && THEMES[saved]) {
-      setTheme(saved);
-    }
-    setMounted(true);
-  }, []);
+    return saved && THEMES[saved] ? saved : "light";
+  });
   const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
 
   const [highlights, setHighlights] = useState<HighlightsMap>(loadHighlights);
