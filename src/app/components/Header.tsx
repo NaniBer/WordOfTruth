@@ -93,7 +93,7 @@ export const Header = ({
           <CustomSelect
             value={amharicVersion}
             options={[
-              { value: "amharic_bible", label: "Haile Selassie" },
+              { value: "amharic_bible", label: "Amh 1954" },
               { value: "amharic_nasb", label: "NASB" },
             ]}
             onChange={(value) =>
@@ -107,7 +107,7 @@ export const Header = ({
           <CustomSelect
             value={amharicVersion}
             options={[
-              { value: "amharic_bible", label: "Haile Selassie" },
+              { value: "amharic_bible", label: "Amh 1954" },
               { value: "amharic_nasb", label: "NASB" },
             ]}
             onChange={(value) =>
