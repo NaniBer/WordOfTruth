@@ -1,3 +1,5 @@
+import { getDataUrl } from "./dataUrl";
+
 type CacheBibleOptions = {
   setStatus?: (msg: string | null) => void;
   onProgress?: (cached: number, total: number) => void;
@@ -34,7 +36,7 @@ export const cacheBibleData = async ({
     for (const bookPath of booksToCache) {
       for (let i = 1; i <= 66; i++) {
         try {
-          const url = `/data/${bookPath}/${i}.json`;
+          const url = getDataUrl(`data/${bookPath}/${i}.json`);
           const response = await fetch(url);
 
           if (response.ok) {
