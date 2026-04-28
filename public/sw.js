@@ -4,34 +4,13 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png',
-];
-
-// Bible data paths to cache
-const BIBLE_DATA_PATHS = [
-  '/data/amharic_bible/',
-  '/data/amharic_nasb/',
-  '/data/english/niv/',
-  '/data/english/nlt/',
-  '/data/english/csb/',
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
-    }).catch((err) => {
-      console.error('[SW] Failed to cache static assets:', err);
     })
   );
   self.skipWaiting();
@@ -39,13 +18,11 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -70,19 +47,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy: Cache First for Bible data files
-  if (isBibleDataRequest(url)) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Return cached version and update cache in background
-          fetchAndCache(request);
-          return cachedResponse;
-        }
-        // Not in cache, fetch and cache
-        return fetchAndCache(request);
-      })
-    );
+  // Skip external CDN requests (don't cache bible data from external source)
+  // Only cache same-origin requests
+  if (url.origin !== self.location.origin) {
     return;
   }
 
@@ -105,40 +72,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
-// Helper function to check if request is for Bible data
-function isBibleDataRequest(url) {
-  const path = url.pathname;
-  return BIBLE_DATA_PATHS.some((dataPath) => path.startsWith(dataPath));
-}
-
-// Helper function to fetch and cache
-async function fetchAndCache(request) {
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    console.error('[SW] Fetch failed:', error);
-    // Return a fallback response if available
-    return new Response(JSON.stringify({ error: 'Offline' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
-
-// Background sync for offline bookmarks/highlights
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-bookmarks') {
-    event.waitUntil(syncBookmarks());
-  }
-});
-
-async function syncBookmarks() {
-  // This would sync bookmarks/highlights when back online
-  console.log('[SW] Syncing bookmarks...');
-}

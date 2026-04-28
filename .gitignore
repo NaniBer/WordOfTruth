@@ -51,3 +51,6 @@ CLOUDFLARE_R2_SETUP.md
 DATA_SETUP.md
 deploy-data.sh
 upload-to-r2.sh
+
+# vitest config
+vitest.config.ts
