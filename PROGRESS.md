@@ -21,21 +21,26 @@
 - [x] **Previous/Next Chapter Buttons** - In chapter navigation bar
 
 ### Bookmarks & Highlights
-- [x] **Bookmarks** - Save verses to localStorage
-- [x] **Color Highlights** - Highlight verses with 5 colors
-  - Yellow, Green, Blue, Pink, Purple
-- [x] **Saved Verses Tab** - View all saved bookmarks
-- [x] **Remove Bookmarks** - From saved verses list
+- [x] **Bookmarks** - Save verses with 3 categories (Faith, Hope, Love)
+- [x] **Color Highlights** - Per-theme highlight colors with ring indicator
+- [x] **Saved Verses Tab** - View bookmarks organized by category
+- [x] **Remove Bookmarks** - Delete individual highlights
+- [x] **Cross-Theme Persistence** - Highlights persist across all 6 themes
+- [x] **Data Migration** - Auto-migrate from legacy v2 format to v3
 
 ### Copy to Clipboard
 - [x] **Copy Button** - On every verse when selected
-- [x] **Formatted Copy** - Includes:
-  - Amharic book name + chapter:verse
-  - English book name + chapter:verse
-  - Amharic text
-  - English text
+- [x] **Formatted Copy** - Includes Amharic book name + chapter:verse, English name + chapter:verse, both texts
 - [x] **Fallback Support** - Works on older browsers and non-secure contexts
 - [x] **Toast Notification** - Shows "Copied to clipboard" for 2 seconds
+
+### Search
+- [x] **Full-Text Search** - Search across all 66 books and chapters
+- [x] **Multi-Language** - Search in Amharic, English, or both (respects translationView)
+- [x] **Debounced** - 300ms debounce, cancels previous search via AbortController
+- [x] **Match Highlighting** - Regex-based text highlighting in results
+- [x] **Result Limiting** - Capped at 50 results
+- [x] **Quick Navigation** - Tap result to jump directly to verse
 
 ### Offline Support (PWA)
 - [x] **Service Worker** - Caches Bible data automatically
@@ -46,12 +51,15 @@
 - [x] **Cache-First Strategy** - Serves cached data when offline
 
 ### UI/UX
-- [x] **Dark Theme** - iOS-style dark mode throughout
+- [x] **6 Reading Themes** - Light, Warm, Dark, Midnight, AMOLED, Ocean
+- [x] **Anti-Flash** - Inline script applies CSS vars before first paint
+- [x] **Glassmorphism Design** - Modern frosted glass UI
 - [x] **Bottom Navigation** - Bible, Saved, Settings tabs
 - [x] **Header** - Book picker, chapter number, translation view toggles
-- [x] **Version Selectors** - Dropdowns for Amharic and English versions
-- [x] **Loading States** - Shows "Loading..." when fetching data
-- [x] **Toast Notifications** - For copy feedback
+- [x] **Version Selectors** - Theme-aware custom dropdowns
+- [x] **Loading Screen** - Animated spinner during data fetch
+- [x] **Toast Notifications** - Success/error feedback
+- [x] **Font Size Control** - S/M/L/XL with +/- buttons
 
 ### Settings
 - [x] **Settings Tab** - New tab with:
@@ -112,20 +120,27 @@ a8f6664 Fix clipboard copy functionality with fallback
 0a2b533 Add bilingual Bible support with version switching
 ```
 
-## 🎯 Next Steps (Ideas)
+## 🎯 Future Ideas
 
-- [ ] Search functionality - Search verses by keyword
-- [ ] Reading plans - Daily reading schedules
-- [ ] Audio narration - Text-to-speech for verses
-- [ ] Font size settings - Adjust text size
-- [ ] Night mode toggle - Pure black background
-- [ ] Verse notes - Add personal notes to verses
-- [ ] Cross-references - Link related verses
-- [ ] Share via native share sheet - iOS/Android share
+### Installability (PWA)
+- [ ] **App Icons** - Generate 8 PNG sizes (72 to 512px) referenced in manifest.json
+- [ ] **Apple Touch Icon** - `<link rel="apple-touch-icon">` for Safari "Add to Home Screen"
+- [ ] **Install Prompt** - Capture `beforeinstallprompt` event + install button in Settings
+- [ ] **iOS Splash Screen** - `<link rel="apple-touch-startup-image">` per device size
+- [ ] **Screenshots** - Add `screenshots` array to manifest for richer Android install dialog
+
+### Features
+- [ ] Reading plans / daily devotionals
+- [ ] Audio narration / text-to-speech
+- [ ] Verse notes / personal comments
+- [ ] Native share sheet integration
+- [ ] Cross-device sync
+- [ ] Multiple bookmark collections
+- [ ] Wrap as native iOS/Android app (Capacitor or React Native)
 
 ## 📝 Notes
 
 - Bible data is stored in `/public/data/` (gitignored - must be added locally)
 - Currently 5 Bible versions supported
 - Verse merging works for Ethiopian Bible format
-- App is installable as PWA on iOS/Android
+- App is technically PWA-ready but missing install triggers (icons, prompts)
