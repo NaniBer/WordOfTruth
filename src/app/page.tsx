@@ -75,7 +75,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   // Load theme synchronously to prevent flash
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("warm");
   const [mounted, setMounted] = useState(false);
   const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
 
@@ -115,6 +115,7 @@ export default function Home() {
   const [isOnline, setIsOnline] = useState(true);
   const [cachingStatus, setCachingStatus] = useState<string | null>(null);
   const [isDataCached, setIsDataCached] = useState(false);
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
 
   const t = THEMES[theme];
 
@@ -655,6 +656,8 @@ export default function Home() {
             cacheAllBibleData={cacheAllBibleData}
             t={t}
             isCached={isDataCached}
+            showFeatureModal={showFeatureModal}
+            setShowFeatureModal={setShowFeatureModal}
           />
         );
 

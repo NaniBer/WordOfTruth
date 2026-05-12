@@ -67,7 +67,7 @@ export default function RootLayout({
                     'amoled': { bg: '#000000', text: '#f3f4f6' },
                     'ocean': { bg: '#0a192f', text: '#f0f9ff' }
                   };
-                  var theme = themeData[savedTheme] || themeData['light'];
+                  var theme = themeData[savedTheme] || themeData['warm'];
                   var el = document.documentElement;
                   el.style.setProperty('--theme-bg', theme.bg);
                   el.style.setProperty('--theme-text', theme.text);
