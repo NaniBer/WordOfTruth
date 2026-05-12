@@ -1,5 +1,3 @@
-import { HIGHLIGHT_LABELS } from "@/app/constants/themes";
-import { SavedGroup } from "./SavedGroup";
 import { Book } from "@/app/types/book";
 
 interface HighlightData {
@@ -26,6 +24,11 @@ interface SavedVersesProps {
     textSecondary: string;
     gradient: string;
     textTertiary: string;
+    text: string;
+    surface: string;
+    surfaceActive: string;
+    highlightBg: [string, string, string];
+    verseText: string;
   };
 }
 
@@ -40,7 +43,8 @@ export function SavedVersesView({
   removeHighlight,
   t,
 }: SavedVersesProps) {
-  const saved = Object.values(highlights);
+  const saved = Object.values(highlights)
+    .sort((a, b) => b.timestamp - a.timestamp);
 
   return (
     <div className="py-6 space-y-4">
@@ -56,34 +60,62 @@ export function SavedVersesView({
       {saved.length === 0 ? (
         <div className={`${t.textTertiary} text-center py-16`}>
           <p className="text-sm">No saved verses yet</p>
-          <p className="text-xs mt-1">Highlight verses to save them</p>
+          <p className="text-xs mt-1">Select a verse and tap a color to save it</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {[0, 1, 2].map((colorIdx) => {
-            const color = highlightColors[colorIdx];
-            const group = saved.filter((h) => h.colorIdx === colorIdx);
-
-            if (!group.length) return null;
+        <div className="space-y-2.5">
+          {saved.map((h) => {
+            const id = `${h.bookName.toLowerCase()}-${h.chapter}-${h.verse}`;
+            const color = highlightColors[h.colorIdx];
 
             return (
-              <SavedGroup
-                key={colorIdx}
-                color={color}
-                label={HIGHLIGHT_LABELS[colorIdx]}
-                items={group}
-                t={t}
-                onOpen={(h: HighlightData) => {
-                  const book = amharicBooks.find((b) => b.name === h.bookName);
-                  if (book) {
-                    setSelectedBook(book);
-                    setChapter(h.chapter);
-                    setSelectedVerse(h.verse);
-                    setActiveTab("bible");
-                  }
-                }}
-                onRemove={removeHighlight}
-              />
+              <div
+                key={id}
+                className={`${t.surface} rounded-2xl overflow-hidden transition-all duration-200 backdrop-blur-sm`}
+              >
+                {/* Color bar + Header row */}
+                <button
+                  onClick={() => {
+                    const book = amharicBooks.find((b) => b.name === h.bookName);
+                    if (book) {
+                      setSelectedBook(book);
+                      setChapter(h.chapter);
+                      setSelectedVerse(h.verse);
+                      setActiveTab("bible");
+                    }
+                  }}
+                  className={`w-full text-left p-4 border-l-4 ${t.highlightBg[h.colorIdx]} hover:${t.surfaceActive} transition-all`}
+                  style={{ borderLeftColor: color }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`${t.text} text-sm font-bold`}>
+                      {h.bookAmharic} {h.chapter}:{h.verse}
+                    </span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                  </div>
+
+                  <p className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}>
+                    {h.amharic}
+                  </p>
+
+                  {h.english && (
+                    <p className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}>
+                      {h.english}
+                    </p>
+                  )}
+                </button>
+
+                {/* Remove button */}
+                <button
+                  onClick={() => removeHighlight(id)}
+                  className={`w-full py-2.5 text-xs font-semibold ${t.textTertiary} hover:text-red-400 ${t.surfaceActive} border-t border-white/[0.05] transition-colors`}
+                >
+                  Remove
+                </button>
+              </div>
             );
           })}
         </div>

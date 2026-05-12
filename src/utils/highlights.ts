@@ -1,5 +1,3 @@
-export const HIGHLIGHT_LABELS = ["Faith", "Hope", "Love"] as const;
-
 export const HIGHLIGHT_STORAGE_KEY = "bible-highlights-v3";
 export const HIGHLIGHT_V2_STORAGE_KEY = "bible-highlights-v2";
 export const THEME_STORAGE_KEY = "bible-theme";

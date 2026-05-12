@@ -18,7 +18,6 @@ import { StatusBanner } from "./components/StatusBanner";
 import { SearchModal } from "./components/SearchModal";
 import { cacheBibleData } from "@/utils/cacheBible";
 import {
-  HIGHLIGHT_LABELS,
   loadHighlights,
   saveHighlightsToStorage,
   getHighlightId,
@@ -515,12 +514,12 @@ export default function Home() {
               }
             >
               <span
-                className="w-2.5 h-2.5 rounded-full inline-block"
+                className="w-3.5 h-3.5 rounded-full inline-block border border-white/20"
                 style={{
-                  backgroundColor: currentHighlightIdx === i ? "white" : color,
+                  backgroundColor: color,
+                  boxShadow: `inset 0 0 0 2px ${currentHighlightIdx === i ? 'white' : 'transparent'}`,
                 }}
               />
-              {HIGHLIGHT_LABELS[i]}
             </button>
           ))}
           {currentHighlightIdx !== null && (

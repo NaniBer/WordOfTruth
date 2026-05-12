@@ -192,4 +192,4 @@ export const THEMES: Record<Theme, ThemeConfig> = {
     highlightBg: ["bg-teal-500/20", "bg-indigo-500/20", "bg-amber-500/20"],
   },
 };
-export const HIGHLIGHT_LABELS = ["Faith", "Hope", "Love"] as const;
+export const HIGHLIGHT_COLOR_COUNT = 3;
