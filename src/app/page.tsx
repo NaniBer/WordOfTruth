@@ -158,9 +158,9 @@ export default function Home() {
   useEffect(() => {
     async function checkCache() {
       try {
-        const cache = await caches.open('wordoftruth-v1');
+        const cache = await caches.open("wordoftruth-v1");
         // Check if at least Genesis is cached
-        const testUrl = getDataUrl('data/amharic_bible/1.json');
+        const testUrl = getDataUrl("data/amharic_bible/1.json");
         const cached = await cache.match(testUrl);
         setIsDataCached(!!cached);
       } catch {
@@ -210,7 +210,12 @@ export default function Home() {
       setStatus: (msg) => {
         setCachingStatus(msg);
         // If caching is complete (final success message without "..."), mark as cached
-        if (msg && msg.includes('Cached') && msg.includes('files') && !msg.includes('...')) {
+        if (
+          msg &&
+          msg.includes("Cached") &&
+          msg.includes("files") &&
+          !msg.includes("...")
+        ) {
           setIsDataCached(true);
         }
       },
@@ -278,10 +283,9 @@ export default function Home() {
           showToast("Failed to copy");
         }
       }
-    } catch (err) {
-      console.error("Failed to copy:", err);
-      showToast("Failed to copy");
-    }
+      } catch (err) {
+        showToast("Failed to copy");
+      }
   };
 
   const shouldShowVerse = (verses: string[], index: number): boolean => {
@@ -315,45 +319,51 @@ export default function Home() {
       const bookIndex = amharicBooks.findIndex(
         (b) => b.name === selectedBook.name,
       );
-      
+
       if (bookIndex === -1) return;
-      
-      const amharicUrl = getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`);
-      const englishUrl = getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`);
-      
+
+      const amharicUrl = getDataUrl(
+        `data/${amharicVersion}/${bookIndex + 1}.json`,
+      );
+      const englishUrl = getDataUrl(
+        `data/english/${englishVersion}/${bookIndex + 1}.json`,
+      );
+
       let loadedFromCache = false;
-      
+
       try {
-        const cache = await caches.open('wordoftruth-v1');
+        const cache = await caches.open("wordoftruth-v1");
         const [cachedAmharic, cachedEnglish] = await Promise.all([
           cache.match(amharicUrl),
           cache.match(englishUrl),
         ]);
-        
+
         if (cachedAmharic && cachedEnglish) {
           const [amharicData, englishData] = await Promise.all([
             cachedAmharic.json(),
             cachedEnglish.json(),
           ]);
-          
+
           const amharicChapter = amharicData.chapters.find(
             (c: any) => c.chapter === chapter.toString(),
           );
           const englishChapter = englishData.chapters.find(
             (c: any) => c.chapter === chapter.toString(),
           );
-          
+
           setVerses(amharicChapter?.verses || []);
           setEnglishVerses(englishChapter?.verses || []);
           setLoading(false);
           loadedFromCache = true;
-          
+
           // Background refresh
           Promise.all([
             fetch(amharicUrl).then(async (r) => {
               if (r.ok) {
                 const d = await r.json();
-                const c = d.chapters.find((c: any) => c.chapter === chapter.toString());
+                const c = d.chapters.find(
+                  (c: any) => c.chapter === chapter.toString(),
+                );
                 if (c) setVerses(c.verses || []);
                 await cache.put(amharicUrl, r.clone());
               }
@@ -361,7 +371,9 @@ export default function Home() {
             fetch(englishUrl).then(async (r) => {
               if (r.ok) {
                 const d = await r.json();
-                const c = d.chapters.find((c: any) => c.chapter === chapter.toString());
+                const c = d.chapters.find(
+                  (c: any) => c.chapter === chapter.toString(),
+                );
                 if (c) setEnglishVerses(c.verses || []);
                 await cache.put(englishUrl, r.clone());
               }
@@ -369,11 +381,10 @@ export default function Home() {
           ]).catch(() => {});
         }
       } catch {
-        // Cache not available, fall through to network
       }
-      
+
       if (loadedFromCache) return;
-      
+
       // No complete cache hit, fetch from network
       setLoading(true);
       try {
@@ -381,7 +392,7 @@ export default function Home() {
           fetch(amharicUrl),
           fetch(englishUrl),
         ]);
-        
+
         if (amharicResponse.ok) {
           const amharicData = await amharicResponse.json();
           const amharicChapter = amharicData.chapters.find(
@@ -391,7 +402,7 @@ export default function Home() {
         } else {
           setVerses([]);
         }
-        
+
         if (englishResponse.ok) {
           const englishData = await englishResponse.json();
           const englishChapter = englishData.chapters.find(
@@ -402,7 +413,6 @@ export default function Home() {
           setEnglishVerses([]);
         }
       } catch (error) {
-        console.error("Error loading chapter:", error);
         setVerses([]);
         setEnglishVerses([]);
       }
@@ -517,7 +527,7 @@ export default function Home() {
                 className="w-3.5 h-3.5 rounded-full inline-block border border-white/20"
                 style={{
                   backgroundColor: color,
-                  boxShadow: `inset 0 0 0 2px ${currentHighlightIdx === i ? 'white' : 'transparent'}`,
+                  boxShadow: `inset 0 0 0 2px ${currentHighlightIdx === i ? "white" : "transparent"}`,
                 }}
               />
             </button>

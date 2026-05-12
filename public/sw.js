@@ -96,9 +96,10 @@ self.addEventListener('fetch', (event) => {
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
           if (networkResponse.ok) {
-            // Update cache
+            // Clone synchronously before returning the original
+            const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, networkResponse.clone());
+              cache.put(request, responseClone);
             });
             return networkResponse;
           }
