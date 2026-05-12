@@ -14,6 +14,7 @@ interface SettingsProps {
   isCached?: boolean;
   showFeatureModal?: boolean;
   setShowFeatureModal?: (show: boolean) => void;
+  onCheckUpdates?: () => void;
 }
 
 export function SettingsView({
@@ -29,6 +30,7 @@ export function SettingsView({
   isCached = false,
   showFeatureModal = false,
   setShowFeatureModal = () => {},
+  onCheckUpdates = () => {},
 }: SettingsProps) {
   return (
     <div className="py-6 px-1 space-y-4">
@@ -146,6 +148,27 @@ export function SettingsView({
             </p>
           </>
         )}
+      </div>
+
+      {/* Updates */}
+      <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+        <h3 className={`${t.text} text-base font-semibold mb-3`}>
+          Updates
+        </h3>
+
+        <button
+          onClick={onCheckUpdates}
+          disabled={!isOnline}
+          className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] flex items-center justify-center gap-2`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Check for Updates
+        </button>
+        <p className={`${t.textTertiary} text-xs mt-2`}>
+          Check for new Bible data and features
+        </p>
       </div>
 
       {/* About */}

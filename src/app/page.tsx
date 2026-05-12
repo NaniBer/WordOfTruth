@@ -116,6 +116,7 @@ export default function Home() {
   const [cachingStatus, setCachingStatus] = useState<string | null>(null);
   const [isDataCached, setIsDataCached] = useState(false);
   const [showFeatureModal, setShowFeatureModal] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(false);
 
   const t = THEMES[theme];
 
@@ -315,6 +316,15 @@ export default function Home() {
   const ntBooks = amharicBooks.slice(39);
   const filteredBooks = testament === "old" ? otBooks : ntBooks;
 
+  const handleRefresh = () => {
+    showToast("Checking for updates...");
+    setForceRefresh(true);
+    setTimeout(() => {
+      setForceRefresh(false);
+      setTimeout(() => showToast("Updated successfully!"), 500);
+    }, 100);
+  };
+
   useEffect(() => {
     async function loadChapter() {
       const bookIndex = amharicBooks.findIndex(
@@ -339,7 +349,7 @@ export default function Home() {
           cache.match(englishUrl),
         ]);
 
-        if (cachedAmharic && cachedEnglish) {
+        if (!forceRefresh && cachedAmharic && cachedEnglish) {
           const [amharicData, englishData] = await Promise.all([
             cachedAmharic.json(),
             cachedEnglish.json(),
@@ -420,7 +430,7 @@ export default function Home() {
       setLoading(false);
     }
     loadChapter();
-  }, [selectedBook, chapter, englishVersion, amharicVersion]);
+  }, [selectedBook, chapter, englishVersion, amharicVersion, forceRefresh]);
 
   useEffect(() => {
     if (translationView !== "both") return;
@@ -658,6 +668,7 @@ export default function Home() {
             isCached={isDataCached}
             showFeatureModal={showFeatureModal}
             setShowFeatureModal={setShowFeatureModal}
+            onCheckUpdates={handleRefresh}
           />
         );
 
