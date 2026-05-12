@@ -194,29 +194,13 @@ export const removeHighlightById = (
   return rest;
 };
 
-// Get highlights grouped by color index
-export const getHighlightsByColor = (
+// Get all highlights sorted by timestamp descending
+export const getAllHighlights = (
   highlights: HighlightsMap,
-): [HighlightData[], HighlightData[], HighlightData[]] => {
-  const faith: HighlightData[] = [];
-  const hope: HighlightData[] = [];
-  const love: HighlightData[] = [];
-  
-  Object.values(highlights).forEach((h) => {
-    if (h.colorIdx === 0) faith.push(h);
-    else if (h.colorIdx === 1) hope.push(h);
-    else if (h.colorIdx === 2) love.push(h);
-  });
-  
-  // Sort by timestamp descending
-  const sortByTime = (a: HighlightData, b: HighlightData) =>
-    b.timestamp - a.timestamp;
-  
-  return [
-    faith.sort(sortByTime),
-    hope.sort(sortByTime),
-    love.sort(sortByTime),
-  ];
+): HighlightData[] => {
+  return Object.values(highlights).sort(
+    (a, b) => b.timestamp - a.timestamp
+  );
 };
 
 // Count total highlights
