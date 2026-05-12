@@ -317,81 +317,82 @@ export default function Home() {
         (b) => b.name === selectedBook.name,
       );
       
-      // Try to get from cache first
+      if (bookIndex === -1) return;
+      
+      const amharicUrl = getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`);
+      const englishUrl = getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`);
+      
+      let loadedFromCache = false;
+      
       try {
         const cache = await caches.open('wordoftruth-v1');
-        const amharicUrl = getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`);
-        const englishUrl = getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`);
+        const [cachedAmharic, cachedEnglish] = await Promise.all([
+          cache.match(amharicUrl),
+          cache.match(englishUrl),
+        ]);
         
-        const cachedAmharic = await cache.match(amharicUrl);
-        const cachedEnglish = await cache.match(englishUrl);
+        if (cachedAmharic && cachedEnglish) {
+          const [amharicData, englishData] = await Promise.all([
+            cachedAmharic.json(),
+            cachedEnglish.json(),
+          ]);
+          
+          const amharicChapter = amharicData.chapters.find(
+            (c: any) => c.chapter === chapter.toString(),
+          );
+          const englishChapter = englishData.chapters.find(
+            (c: any) => c.chapter === chapter.toString(),
+          );
+          
+          setVerses(amharicChapter?.verses || []);
+          setEnglishVerses(englishChapter?.verses || []);
+          setLoading(false);
+          loadedFromCache = true;
+          
+          // Background refresh
+          Promise.all([
+            fetch(amharicUrl).then(async (r) => {
+              if (r.ok) {
+                const d = await r.json();
+                const c = d.chapters.find((c: any) => c.chapter === chapter.toString());
+                if (c) setVerses(c.verses || []);
+                await cache.put(amharicUrl, r.clone());
+              }
+            }),
+            fetch(englishUrl).then(async (r) => {
+              if (r.ok) {
+                const d = await r.json();
+                const c = d.chapters.find((c: any) => c.chapter === chapter.toString());
+                if (c) setEnglishVerses(c.verses || []);
+                await cache.put(englishUrl, r.clone());
+              }
+            }),
+          ]).catch(() => {});
+        }
+      } catch {
+        // Cache not available, fall through to network
+      }
+      
+      if (loadedFromCache) return;
+      
+      // No complete cache hit, fetch from network
+      setLoading(true);
+      try {
+        const [amharicResponse, englishResponse] = await Promise.all([
+          fetch(amharicUrl),
+          fetch(englishUrl),
+        ]);
         
-        if (cachedAmharic) {
-          const amharicData = await cachedAmharic.json();
+        if (amharicResponse.ok) {
+          const amharicData = await amharicResponse.json();
           const amharicChapter = amharicData.chapters.find(
             (c: any) => c.chapter === chapter.toString(),
           );
           setVerses(amharicChapter?.verses || []);
-          setLoading(false); // Show cached data immediately
+        } else {
+          setVerses([]);
         }
         
-        if (cachedEnglish) {
-          const englishData = await cachedEnglish.json();
-          const englishChapter = englishData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
-          setEnglishVerses(englishChapter?.verses || []);
-          setLoading(false);
-        }
-        
-        // If we have cached data, try to update in background
-        if (cachedAmharic || cachedEnglish) {
-          try {
-            const amharicResponse = await fetch(amharicUrl);
-            if (amharicResponse.ok) {
-              const amharicData = await amharicResponse.json();
-              const amharicChapter = amharicData.chapters.find(
-                (c: any) => c.chapter === chapter.toString(),
-              );
-              setVerses(amharicChapter?.verses || []);
-              await cache.put(amharicUrl, amharicResponse.clone());
-            }
-            
-            const englishResponse = await fetch(englishUrl);
-            if (englishResponse.ok) {
-              const englishData = await englishResponse.json();
-              const englishChapter = englishData.chapters.find(
-                (c: any) => c.chapter === chapter.toString(),
-              );
-              setEnglishVerses(englishChapter?.verses || []);
-              await cache.put(englishUrl, englishResponse.clone());
-            }
-          } catch {
-            // Silent fail - we already have cached data
-          }
-          return;
-        }
-      } catch {
-        // Cache not available, continue to fetch
-      }
-      
-      // No cache, fetch from network
-      setLoading(true);
-      try {
-        const bookIndex = amharicBooks.findIndex(
-          (b) => b.name === selectedBook.name,
-        );
-        const amharicResponse = await fetch(
-          getDataUrl(`data/${amharicVersion}/${bookIndex + 1}.json`),
-        );
-        const amharicData = await amharicResponse.json();
-        const amharicChapter = amharicData.chapters.find(
-          (c: any) => c.chapter === chapter.toString(),
-        );
-        setVerses(amharicChapter?.verses || []);
-        const englishResponse = await fetch(
-          getDataUrl(`data/english/${englishVersion}/${bookIndex + 1}.json`),
-        );
         if (englishResponse.ok) {
           const englishData = await englishResponse.json();
           const englishChapter = englishData.chapters.find(
