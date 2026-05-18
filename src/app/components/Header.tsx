@@ -45,13 +45,11 @@ export const Header = ({
           onClick={() => setShowBookPicker(true)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] transition-all"
         >
-          <div className={`bg-gradient-to-r ${t.bookGradient} bg-clip-text`}>
-            <span className={`text-base font-bold ${t.text}`}>
-              {translationView === "english"
-                ? selectedBook.abbrEnglish
-                : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
-            </span>
-          </div>
+          <span className={`text-base font-bold ${t.primary}`}>
+            {translationView === "english"
+              ? selectedBook.abbrEnglish
+              : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
+          </span>
 
           <span className={`${t.textSecondary} text-sm font-medium`}>
             {chapter}
@@ -142,7 +140,7 @@ export const Header = ({
               onClick={() => setTranslationView(view)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 translationView === view
-                  ? `bg-gradient-to-r ${t.gradient} text-white shadow-md`
+                  ? `${t.buttonBg} text-white shadow-md`
                   : `${t.textTertiary} hover:${t.textSecondary}`
               }`}
             >

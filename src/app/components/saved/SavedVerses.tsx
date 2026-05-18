@@ -22,7 +22,7 @@ interface SavedVersesProps {
   removeHighlight: (id: string) => void;
   t: {
     textSecondary: string;
-    gradient: string;
+    primary: string;
     textTertiary: string;
     text: string;
     surface: string;
@@ -49,9 +49,7 @@ export function SavedVersesView({
   return (
     <div className="py-6 space-y-4">
       <div className={`${t.textSecondary} text-lg font-bold px-1`}>
-        <span
-          className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}
-        >
+        <span className={t.primary}>
           Saved
         </span>{" "}
         Verses ({saved.length})

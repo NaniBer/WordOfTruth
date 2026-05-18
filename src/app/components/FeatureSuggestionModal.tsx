@@ -69,7 +69,7 @@ Sent from Word of Truth Bible App
 
           <button
             onClick={handleSubmit}
-            className={`w-full mt-4 py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl font-bold text-sm shadow-lg active:scale-[0.98] transition-all`}
+            className={`w-full mt-4 py-3 ${t.buttonBg} text-white rounded-xl font-bold text-sm shadow-lg active:scale-[0.98] transition-all`}
           >
             Send Suggestion
           </button>

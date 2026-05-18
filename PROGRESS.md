@@ -91,9 +91,9 @@
 
 ## 📊 Current Status
 
-**Last Updated:** April 27, 2026
+**Last Updated:** May 18, 2026
 
-**Latest Commit:** `40a8e6e` - Add toast notification for copy to clipboard
+**Latest Commit:** PWA Installability Added
 
 **Features Working:**
 - ✅ All navigation (swipe, buttons, picker)
@@ -102,6 +102,8 @@
 - ✅ Copy to clipboard with toast
 - ✅ Offline mode with caching
 - ✅ Settings tab
+- ✅ PWA Install prompt (Android/Chrome)
+- ✅ iOS Safari install instructions
 
 **Tested On:**
 - iPhone Safari (PWA mode)
@@ -123,10 +125,11 @@ a8f6664 Fix clipboard copy functionality with fallback
 ## 🎯 Future Ideas
 
 ### Installability (PWA)
-- [ ] **App Icons** - Generate 8 PNG sizes (72 to 512px) referenced in manifest.json
-- [ ] **Apple Touch Icon** - `<link rel="apple-touch-icon">` for Safari "Add to Home Screen"
-- [ ] **Install Prompt** - Capture `beforeinstallprompt` event + install button in Settings
-- [ ] **iOS Splash Screen** - `<link rel="apple-touch-startup-image">` per device size
+- [x] **App Icons** - Generate 8 PNG sizes (72 to 512px) referenced in manifest.json
+- [x] **Apple Touch Icon** - `<link rel="apple-touch-icon">` for Safari "Add to Home Screen"
+- [x] **Install Prompt** - Capture `beforeinstallprompt` event + install button in Settings
+- [x] **iOS Instructions** - Show step-by-step Safari installation guide
+- [ ] **iOS Splash Screen** - `<link rel="apple-touch-startup-image">` per device size (optional)
 - [ ] **Screenshots** - Add `screenshots` array to manifest for richer Android install dialog
 
 ### Features
@@ -143,4 +146,4 @@ a8f6664 Fix clipboard copy functionality with fallback
 - Bible data is stored in `/public/data/` (gitignored - must be added locally)
 - Currently 5 Bible versions supported
 - Verse merging works for Ethiopian Bible format
-- App is technically PWA-ready but missing install triggers (icons, prompts)
+- PWA is now fully installable on Android (Chrome) and iOS (Safari manual install)

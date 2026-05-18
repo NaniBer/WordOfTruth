@@ -83,7 +83,7 @@ export default function LandingPage() {
           </p>
           <a
             href="/"
-            className={`inline-block px-6 py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl font-bold text-base shadow-lg active:scale-[0.98] transition-all`}
+            className={`inline-block px-6 py-3 ${t.buttonBg} text-white rounded-xl font-bold text-base shadow-lg active:scale-[0.98] transition-all`}
           >
             Start Reading Now
           </a>
@@ -131,7 +131,7 @@ export default function LandingPage() {
               >
                 <div className="flex gap-3">
                   <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${t.gradient} flex items-center justify-center text-white font-bold text-sm`}>
+                    <div className={`w-8 h-8 rounded-lg ${t.buttonBg} flex items-center justify-center text-white font-bold text-sm`}>
                       {step.step}
                     </div>
                   </div>
@@ -160,7 +160,7 @@ export default function LandingPage() {
             </p>
             <a
               href="/"
-              className={`inline-block px-6 py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl font-bold text-base shadow-lg active:scale-[0.98] transition-all`}
+              className={`inline-block px-6 py-3 ${t.buttonBg} text-white rounded-xl font-bold text-base shadow-lg active:scale-[0.98] transition-all`}
             >
               Open Bible App
             </a>

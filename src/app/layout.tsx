@@ -22,8 +22,18 @@ export const metadata: Metadata = {
     title: "Word of Truth",
   },
   icons: {
+    icon: [
+      { url: "/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
+      { url: "/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+      { url: "/icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
+      { url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
     apple: [
-      { url: "/icons/icon-192x192.png", sizes: "192x192" },
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
 };
@@ -49,6 +59,10 @@ export default function RootLayout({
     >
       <head>
         <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <style dangerouslySetInnerHTML={{ __html: `
           html { background-color: var(--theme-bg); color: var(--theme-text); }
           body { background-color: var(--theme-bg); color: var(--theme-text); }

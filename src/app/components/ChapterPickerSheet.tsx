@@ -86,7 +86,7 @@ export function ChapterPickerSheet({
                   }}
                   className={`p-3 rounded-xl text-center font-semibold transition-all duration-200 ${
                     chapter === ch
-                      ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg`
+                      ? `${t.buttonBg} text-white shadow-lg`
                       : `${t.surface} ${t.text} hover:${t.surfaceActive}`
                   }`}
                 >

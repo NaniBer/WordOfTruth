@@ -1,5 +1,6 @@
 import { Theme, ThemeConfig } from "../constants/themes";
 import { FeatureSuggestionModal } from "./FeatureSuggestionModal";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
 interface SettingsProps {
   theme: Theme;
@@ -32,13 +33,12 @@ export function SettingsView({
   setShowFeatureModal = () => {},
   onCheckUpdates = () => {},
 }: SettingsProps) {
+  const { canInstall, isInstalled, isIOS, installApp } = useInstallPrompt();
   return (
     <div className="py-6 px-1 space-y-4">
       {/* Header */}
       <div className={`text-lg font-bold ${t.text}`}>
-        <span
-          className={`bg-gradient-to-r ${t.gradient} bg-clip-text text-transparent`}
-        >
+        <span className={t.primary}>
           Settings
         </span>
       </div>
@@ -54,7 +54,7 @@ export function SettingsView({
               onClick={() => setTheme(key)}
               className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-200 ${
                 theme === key
-                  ? `bg-gradient-to-r ${THEMES[key].gradient} text-white shadow-lg`
+                  ? `${THEMES[key].buttonBg} text-white shadow-lg`
                   : `${t.surfaceActive} ${t.textSecondary}`
               }`}
             >
@@ -79,17 +79,17 @@ export function SettingsView({
 
           <div className="flex gap-2">
             {FONT_SIZES.map((f, i) => (
-              <button
-                key={i}
-                onClick={() => setFontSizeIdx(i)}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
-                  i === fontSizeIdx
-                    ? `bg-gradient-to-r ${t.gradient} text-white shadow-md`
-                    : `${t.surfaceActive} ${t.textTertiary}`
-                }`}
-              >
-                {f.label}
-              </button>
+            <button
+              key={i}
+              onClick={() => setFontSizeIdx(i)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
+                i === fontSizeIdx
+                  ? `${t.buttonBg} text-white shadow-md`
+                  : `${t.surfaceActive} ${t.textTertiary}`
+              }`}
+            >
+              {f.label}
+            </button>
             ))}
           </div>
 
@@ -131,7 +131,7 @@ export function SettingsView({
               Re-cache Bible Data
             </button>
             <p className={`${t.textTertiary} text-xs`}>
-              ✅ Bible data is cached for offline use. Tap to refresh.
+              Bible data is cached for offline use. Tap to refresh.
             </p>
           </>
         ) : (
@@ -139,7 +139,7 @@ export function SettingsView({
             <button
               onClick={cacheAllBibleData}
               disabled={!isOnline}
-              className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
+              className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
             >
               Cache All Bible Data
             </button>
@@ -150,6 +150,45 @@ export function SettingsView({
         )}
       </div>
 
+      {/* Install App */}
+      {(canInstall || isInstalled) && (
+        <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+          <h3 className={`${t.text} text-base font-semibold mb-3`}>
+            Install App
+          </h3>
+
+          {isInstalled ? (
+            <div className={`${t.textSecondary} text-sm flex items-center gap-2`}>
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              App is installed
+            </div>
+          ) : isIOS ? (
+            <div className="space-y-3">
+              <p className={`${t.textSecondary} text-sm leading-relaxed`}>
+                Install this app on your iPhone for the best experience:
+              </p>
+              <ol className={`${t.textSecondary} text-sm space-y-2 list-decimal list-inside`}>
+                <li>Tap the <strong>Share</strong> button in Safari</li>
+                <li>Scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong></li>
+                <li>Tap <strong>&ldquo;Add&rdquo;</strong> in the top right</li>
+              </ol>
+            </div>
+          ) : (
+            <button
+              onClick={installApp}
+              className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Install App
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Updates */}
       <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
         <h3 className={`${t.text} text-base font-semibold mb-3`}>
@@ -159,7 +198,7 @@ export function SettingsView({
         <button
           onClick={onCheckUpdates}
           disabled={!isOnline}
-          className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] flex items-center justify-center gap-2`}
+          className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] flex items-center justify-center gap-2`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -192,7 +231,7 @@ export function SettingsView({
       <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
         <button
           onClick={() => setShowFeatureModal(true)}
-          className={`w-full py-3 bg-gradient-to-r ${t.gradient} text-white rounded-xl font-bold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
+          className={`w-full py-3 ${t.buttonBg} text-white rounded-xl font-bold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />

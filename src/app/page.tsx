@@ -695,7 +695,7 @@ export default function Home() {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-gradient-to-b ${t.bg} transition-colors duration-500`}
+      className={`flex flex-col h-screen ${t.bg} transition-colors duration-500`}
     >
       {/* Header - only show on Bible tab */}
       {activeTab === "bible" && (
@@ -788,7 +788,7 @@ export default function Home() {
                   onClick={() => setTestament(t2)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     testament === t2
-                      ? `bg-gradient-to-r ${t.gradient} text-white shadow-lg`
+                      ? `${t.buttonBg} text-white shadow-lg`
                       : `${t.surface} ${t.textSecondary}`
                   }`}
                 >
@@ -807,7 +807,7 @@ export default function Home() {
                     }}
                     className={`p-3.5 rounded-xl text-left transition-all duration-200 ${
                       selectedBook.name === book.name
-                        ? `bg-gradient-to-r ${t.bookGradient} text-white shadow-lg`
+                        ? `${t.buttonBg} text-white shadow-lg`
                         : `${t.surface} ${t.text} hover:${t.surfaceActive}`
                     }`}
                   >
