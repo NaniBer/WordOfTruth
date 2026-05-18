@@ -151,43 +151,51 @@ export function SettingsView({
       </div>
 
       {/* Install App */}
-      {(canInstall || isInstalled) && (
-        <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
-          <h3 className={`${t.text} text-base font-semibold mb-3`}>
-            Install App
-          </h3>
+      <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
+        <h3 className={`${t.text} text-base font-semibold mb-3`}>
+          Install App
+        </h3>
 
-          {isInstalled ? (
-            <div className={`${t.textSecondary} text-sm flex items-center gap-2`}>
-              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              App is installed
-            </div>
-          ) : isIOS ? (
-            <div className="space-y-3">
-              <p className={`${t.textSecondary} text-sm leading-relaxed`}>
-                Install this app on your iPhone for the best experience:
-              </p>
-              <ol className={`${t.textSecondary} text-sm space-y-2 list-decimal list-inside`}>
-                <li>Tap the <strong>Share</strong> button in Safari</li>
-                <li>Scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong></li>
-                <li>Tap <strong>&ldquo;Add&rdquo;</strong> in the top right</li>
-              </ol>
-            </div>
-          ) : (
-            <button
-              onClick={installApp}
-              className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Install App
-            </button>
-          )}
-        </div>
-      )}
+        {isInstalled ? (
+          <div className={`${t.textSecondary} text-sm flex items-center gap-2`}>
+            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            App is installed
+          </div>
+        ) : isIOS ? (
+          <div className="space-y-3">
+            <p className={`${t.textSecondary} text-sm leading-relaxed`}>
+              Install this app on your iPhone for the best experience:
+            </p>
+            <ol className={`${t.textSecondary} text-sm space-y-2 list-decimal list-inside`}>
+              <li>Tap the <strong>Share</strong> button in Safari</li>
+              <li>Scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong></li>
+              <li>Tap <strong>&ldquo;Add&rdquo;</strong> in the top right</li>
+            </ol>
+          </div>
+        ) : deferredPrompt ? (
+          <button
+            onClick={installApp}
+            className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Install App
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className={`${t.textSecondary} text-sm`}>
+              Install this app for the best experience:
+            </p>
+            <ul className={`${t.textSecondary} text-sm space-y-1 list-disc list-inside`}>
+              <li>Chrome: Menu → &ldquo;Install Word of Truth&rdquo;</li>
+              <li>Safari: File → &ldquo;Install App&rdquo;</li>
+            </ul>
+          </div>
+        )}
+      </div>
 
       {/* Updates */}
       <div className={`${t.surface} rounded-2xl p-4 backdrop-blur-sm`}>
