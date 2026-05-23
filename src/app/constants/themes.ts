@@ -1,4 +1,4 @@
-export type Theme = "light" | "warm" | "dark" | "midnight" | "amoled" | "ocean";
+export type Theme = "warm" | "dark" | "midnight" | "amoled" | "ocean";
 
 export interface ThemeConfig {
   label: string;
@@ -30,34 +30,6 @@ export interface ThemeConfig {
 }
 
 export const THEMES: Record<Theme, ThemeConfig> = {
-  light: {
-    label: "Light",
-    emoji: "☀️",
-    cssVars: { bg: "#ffffff", text: "#111827" },
-    bg: "bg-white",
-    bgSecondary: "bg-gray-50",
-    bgTertiary: "bg-gray-100/60",
-    surface: "bg-white border-gray-200",
-    surfaceActive: "bg-gray-50 border-gray-300",
-    border: "border-gray-200",
-    borderLight: "border-gray-300",
-    text: "text-gray-900",
-    textSecondary: "text-gray-500",
-    textTertiary: "text-gray-400",
-    primary: "text-indigo-600",
-    primaryGlow: "shadow-indigo-500/20",
-    buttonBg: "bg-indigo-600",
-    verseText: "text-gray-800",
-    verseBg: "bg-transparent",
-    verseSelected: "bg-indigo-50 border border-indigo-200",
-    navBg: "bg-white/90",
-    navActive: "bg-indigo-50 text-indigo-600",
-    gradient: "from-indigo-600 to-violet-600",
-    bookGradient: "from-indigo-600 to-violet-600",
-    dot: "bg-indigo-500",
-    highlightColors: ["#6366f1", "#f59e0b", "#10b981"],
-    highlightBg: ["bg-indigo-100", "bg-amber-100", "bg-emerald-100"],
-  },
   warm: {
     label: "Warm",
     emoji: "📖",

@@ -763,7 +763,7 @@ export default function Home() {
           >
             <div className="flex justify-center pt-3 pb-1">
               <div
-                className={`w-10 h-1 rounded-full ${theme === "light" ? "bg-gray-300" : "bg-white/20"}`}
+                className={`w-10 h-1 rounded-full ${theme === "warm" ? "bg-gray-300" : "bg-white/20"}`}
               />
             </div>
             <div
@@ -811,7 +811,7 @@ export default function Home() {
                       {translationView === "amharic" ? book.amharic : book.name}
                     </div>
                     <div
-                      className={`text-xs mt-0.5 ${selectedBook.name === book.name ? "text-white/70" : theme === "light" ? "text-gray-400" : "text-gray-500"}`}
+                      className={`text-xs mt-0.5 ${selectedBook.name === book.name ? "text-white/70" : theme === "warm" ? "text-gray-400" : "text-gray-500"}`}
                     >
                       {book.chapters}{" "}
                       {translationView === "amharic" ? "ክፍሎች" : "chapters"}
