@@ -43,22 +43,22 @@ export function SavedVersesView({
   removeHighlight,
   t,
 }: SavedVersesProps) {
-  const saved = Object.values(highlights)
-    .sort((a, b) => b.timestamp - a.timestamp);
+  const saved = Object.values(highlights).sort(
+    (a, b) => b.timestamp - a.timestamp,
+  );
 
   return (
     <div className="py-6 space-y-4">
       <div className={`${t.textSecondary} text-lg font-bold px-1`}>
-        <span className={t.primary}>
-          Saved
-        </span>{" "}
-        Verses ({saved.length})
+        Saved Verses ({saved.length})
       </div>
 
       {saved.length === 0 ? (
         <div className={`${t.textTertiary} text-center py-16`}>
           <p className="text-sm">No saved verses yet</p>
-          <p className="text-xs mt-1">Select a verse and tap a color to save it</p>
+          <p className="text-xs mt-1">
+            Select a verse and tap a color to save it
+          </p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -74,7 +74,9 @@ export function SavedVersesView({
                 {/* Color bar + Header row */}
                 <button
                   onClick={() => {
-                    const book = amharicBooks.find((b) => b.name === h.bookName);
+                    const book = amharicBooks.find(
+                      (b) => b.name === h.bookName,
+                    );
                     if (book) {
                       setSelectedBook(book);
                       setChapter(h.chapter);
@@ -95,12 +97,16 @@ export function SavedVersesView({
                     />
                   </div>
 
-                  <p className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}>
+                  <p
+                    className={`${t.verseText} text-sm leading-relaxed line-clamp-2`}
+                  >
                     {h.amharic}
                   </p>
 
                   {h.english && (
-                    <p className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}>
+                    <p
+                      className={`${t.textTertiary} text-xs mt-2 line-clamp-1`}
+                    >
                       {h.english}
                     </p>
                   )}

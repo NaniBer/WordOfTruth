@@ -51,9 +51,7 @@ export const Header = ({
               : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
           </span>
 
-          <span className={`${t.textSecondary} text-sm font-medium`}>
-            {chapter}
-          </span>
+          <span className={`${t.primary} text-sm font-medium`}>{chapter}</span>
 
           <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
         </button>
