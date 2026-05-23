@@ -33,7 +33,7 @@ export function SettingsView({
   setShowFeatureModal = () => {},
   onCheckUpdates = () => {},
 }: SettingsProps) {
-  const { canInstall, isInstalled, isIOS, installApp } = useInstallPrompt();
+  const { canInstall, isInstalled, isIOS, installApp, deferredPrompt } = useInstallPrompt();
   return (
     <div className="py-6 px-1 space-y-4">
       {/* Header */}
