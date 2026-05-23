@@ -124,7 +124,7 @@ export function SettingsView({
             <button
               onClick={cacheAllBibleData}
               disabled={!isOnline}
-              className={`w-full py-3 ${t.surface} ${t.text} border ${t.border} rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
+              className={`w-full py-3 ${t.buttonBg} text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-40 active:scale-[0.98] mb-2`}
             >
               Re-cache Bible Data
             </button>
@@ -261,25 +261,6 @@ export function SettingsView({
         <p className={`${t.textSecondary} text-sm`}>Word of Truth Bible App</p>
         <p className={`${t.textTertiary} text-xs mt-0.5`}>Version 2.0</p>
 
-        <a
-          href="/landing"
-          className={`mt-3 w-full py-2.5 ${t.surface} ${t.primary} rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98]`}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          View Landing Page
-        </a>
       </div>
 
       {/* Feature Suggestion */}

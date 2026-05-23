@@ -317,12 +317,8 @@ export default function Home() {
   const filteredBooks = testament === "old" ? otBooks : ntBooks;
 
   const handleRefresh = () => {
-    showToast("Checking for updates...");
-    setForceRefresh(true);
-    setTimeout(() => {
-      setForceRefresh(false);
-      setTimeout(() => showToast("Updated successfully!"), 500);
-    }, 100);
+    showToast("Refreshing app...");
+    setTimeout(() => window.location.reload(), 500);
   };
 
   useEffect(() => {
