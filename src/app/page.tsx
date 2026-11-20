@@ -90,10 +90,11 @@ function Reader() {
     const stored = initial.location?.chapter ?? 1;
     return stored <= initialBook.chapters ? stored : 1;
   });
-  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
-  // Multi-select: a set of verses copied together. Off unless the user turns it on.
-  const [selectionMode, setSelectionMode] = useState(false);
+  // Verses the user has tapped. One selected verse opens its action panel; several can be copied together.
   const [checkedVerses, setCheckedVerses] = useState<number[]>([]);
+  const selectedVerse = checkedVerses.length === 1 ? checkedVerses[0] : null;
+  // Set only when opening a verse from Saved or Search, so the reader scrolls to it once.
+  const [scrollTarget, setScrollTarget] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("bible");
 
   const [showBookPicker, setShowBookPicker] = useState(false);
@@ -162,16 +163,16 @@ function Reader() {
     };
   }, []);
 
-  // Scroll to the verse selected from Saved or Search, once the chapter has rendered.
+  // Scroll to the verse opened from Saved or Search, once the chapter has rendered.
   useEffect(() => {
-    if (selectedVerse === null || activeTab !== "bible" || loading) return;
+    if (scrollTarget === null || activeTab !== "bible" || loading) return;
     const timeoutId = setTimeout(() => {
       document
-        .querySelector(`[data-verse-num="${selectedVerse}"]`)
+        .querySelector(`[data-verse-num="${scrollTarget}"]`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 100);
     return () => clearTimeout(timeoutId);
-  }, [selectedVerse, activeTab, loading]);
+  }, [scrollTarget, activeTab, loading]);
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -179,31 +180,15 @@ function Reader() {
     toastTimer.current = setTimeout(() => setToastMessage(""), TOAST_DURATION_MS);
   };
 
-  const exitSelectionMode = () => {
-    setSelectionMode(false);
-    setCheckedVerses([]);
-  };
+  const clearSelection = () => setCheckedVerses([]);
 
-  const toggleSelectionMode = () => {
-    if (selectionMode) {
-      exitSelectionMode();
-    } else {
-      setSelectedVerse(null);
-      setSelectionMode(true);
-    }
-  };
-
-  // Single-verse mode opens the action panel; selection mode toggles the verse's checkbox.
+  // Tapping a verse adds it to the selection, or removes it if it is already selected.
   const tapVerse = (verseNum: number) => {
-    if (selectionMode) {
-      setCheckedVerses((prev) =>
-        prev.includes(verseNum)
-          ? prev.filter((v) => v !== verseNum)
-          : [...prev, verseNum].sort((a, b) => a - b),
-      );
-    } else {
-      setSelectedVerse((current) => (current === verseNum ? null : verseNum));
-    }
+    setCheckedVerses((prev) =>
+      prev.includes(verseNum)
+        ? prev.filter((v) => v !== verseNum)
+        : [...prev, verseNum].sort((a, b) => a - b),
+    );
   };
 
   const copyCheckedVerses = async () => {
@@ -224,15 +209,17 @@ function Reader() {
     showToast(ok ? `Copied ${count} ${count === 1 ? "verse" : "verses"}` : "Failed to copy");
   };
 
-  const navigateTo = (book: Book, chapterNum: number, verse: number | null = null) => {
-    exitSelectionMode();
+  const navigateTo = (book: Book, chapterNum: number) => {
+    clearSelection();
     setSelectedBook(book);
     setChapter(chapterNum);
-    setSelectedVerse(verse);
+    setScrollTarget(null);
   };
 
   const openVerse = (book: Book, chapterNum: number, verse: number) => {
-    navigateTo(book, chapterNum, verse);
+    navigateTo(book, chapterNum);
+    setScrollTarget(verse);
+    setCheckedVerses([verse]);
     setActiveTab("bible");
   };
 
@@ -357,7 +344,7 @@ function Reader() {
             setEnglishVersion={setEnglishVersion}
             fontSize={fontSize}
             selectedVerse={selectedVerse}
-            selectionMode={selectionMode}
+            selectionMode={checkedVerses.length > 0}
             checkedVerses={checkedVerses}
             onTapVerse={tapVerse}
             getHighlightIdx={getHighlightIdx}
@@ -387,8 +374,6 @@ function Reader() {
           onNextChapter={goNext}
           hasPrevChapter={hasPrevChapter}
           hasNextChapter={hasNextChapter}
-          selectionMode={selectionMode}
-          onToggleSelection={toggleSelectionMode}
         />
       )}
 
@@ -402,19 +387,19 @@ function Reader() {
         {renderScreen()}
       </main>
 
-      {selectionMode && (
+      {checkedVerses.length > 0 && (
         <SelectionBar
           t={t}
           count={checkedVerses.length}
           onCopy={copyCheckedVerses}
-          onCancel={exitSelectionMode}
+          onCancel={clearSelection}
         />
       )}
 
       <BottomNav
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          exitSelectionMode();
+          clearSelection();
           setActiveTab(tab);
         }}
         t={t}

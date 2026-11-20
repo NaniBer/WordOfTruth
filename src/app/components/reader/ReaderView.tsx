@@ -94,7 +94,7 @@ export function ReaderView({
             verseNum={verseNum}
             text={text}
             label={isEnglish ? verseNum.toString() : getVerseLabel(data, index)}
-            isSelected={!selectionMode && selectedVerse === verseNum}
+            isSelected={selectedVerse === verseNum}
             selectionMode={selectionMode}
             isChecked={checkedVerses.includes(verseNum)}
             highlightIdx={getHighlightIdx(verseNum)}

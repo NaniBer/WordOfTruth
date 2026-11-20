@@ -142,7 +142,6 @@ describe("reader (page)", () => {
     render(<Home />);
     await waitFor(() => expect(verseNum(1)).not.toBeNull());
 
-    fireEvent.click(screen.getByRole("button", { name: "Select multiple verses" }));
     fireEvent.click(verseNum(4)!);
     fireEvent.click(verseNum(1)!);
     expect(screen.getByText("2 selected")).toBeInTheDocument();
@@ -166,15 +165,27 @@ describe("reader (page)", () => {
     expect(writeText.mock.calls[0][0]).toContain("Genesis 1:2");
   });
 
-  it("leaves selection mode when the chapter changes", async () => {
+  it("clears the selection when the chapter changes", async () => {
     setLocation("Genesis", 1);
     render(<Home />);
     await waitFor(() => expect(verseNum(1)).not.toBeNull());
-    fireEvent.click(screen.getByRole("button", { name: "Select multiple verses" }));
     fireEvent.click(verseNum(1)!);
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(chapterLabel()).toBe("Ch. 2 / 50"));
-    expect(screen.queryByRole("button", { name: "Copy" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/selected$/)).not.toBeInTheDocument();
+  });
+
+  it("tapping a selected verse again removes it from the selection", async () => {
+    setLocation("Genesis", 1);
+    render(<Home />);
+    await waitFor(() => expect(verseNum(1)).not.toBeNull());
+    fireEvent.click(verseNum(1)!);
+    fireEvent.click(verseNum(2)!);
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+    fireEvent.click(verseNum(2)!);
+    expect(screen.queryByText("2 selected")).not.toBeInTheDocument();
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
   });
 
   it("persists the chosen theme across a fresh render", async () => {

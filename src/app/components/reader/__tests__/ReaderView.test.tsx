@@ -66,11 +66,11 @@ describe("ReaderView", () => {
     expect(rowOf(1).textContent).not.toContain("Copy");
   });
 
-  it("shows checkboxes and no action panel in selection mode", () => {
+  it("shows checkboxes and no action panel while several verses are selected", () => {
     render(
       <ReaderView
         {...base}
-        selectedVerse={1}
+        selectedVerse={null}
         selectionMode
         checkedVerses={[2]}
         translationView="amharic"

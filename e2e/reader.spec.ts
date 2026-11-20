@@ -74,7 +74,6 @@ test.describe('reader', () => {
 
   test('multi-verse copy puts the selected verses on the clipboard in order', async ({ page }) => {
     await openAt(page, 'Genesis', 1);
-    await page.getByRole('button', { name: 'Select multiple verses' }).click();
     await verse(page, 3).click();
     await verse(page, 1).click();
     await expect(page.getByText('2 selected')).toBeVisible();
@@ -96,10 +95,11 @@ test.describe('reader', () => {
     expect(await headerBook(page)).toContain('መዝ');
   });
 
-  test('changing chapter leaves selection mode', async ({ page }) => {
+  test('changing chapter clears the selection', async ({ page }) => {
     await openAt(page, 'Genesis', 1);
-    await page.getByRole('button', { name: 'Select multiple verses' }).click();
     await verse(page, 1).click();
+    await verse(page, 2).click();
+    await expect(page.getByText('2 selected')).toBeVisible();
     await page.getByRole('button', { name: 'Next', exact: true }).click();
     await expect(page.getByText('Ch. 2 / 50')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0);
