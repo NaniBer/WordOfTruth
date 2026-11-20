@@ -2,12 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   shouldShowVerse,
   getVerseLabel,
-  isBookmarked,
-  getBookmarkId,
-  getHighlight,
   findNextChapter,
   findPreviousChapter,
   formatVerseForCopy,
+  formatVersesForCopy,
   copyVerseToClipboard,
 } from '@/utils/bibleHelpers';
 
@@ -64,76 +62,6 @@ describe('getVerseLabel', () => {
     const verses = ['Verse 1', ''];
     expect(getVerseLabel(verses, 0)).toBe('1-2');
     expect(getVerseLabel(verses, 1)).toBe('2');
-  });
-});
-
-describe('getBookmarkId', () => {
-  it('should generate correct bookmark ID', () => {
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(getBookmarkId(book, 1, 5)).toBe('genesis-1-5');
-  });
-
-  it('should handle book names with spaces', () => {
-    const book = { name: '1 Samuel', chapters: 31 };
-    expect(getBookmarkId(book, 10, 15)).toBe('1 samuel-10-15');
-  });
-
-  it('should convert to lowercase', () => {
-    const book = { name: 'GENESIS', chapters: 50 };
-    expect(getBookmarkId(book, 1, 1)).toBe('genesis-1-1');
-  });
-});
-
-describe('isBookmarked', () => {
-  it('should return true when verse is bookmarked', () => {
-    const bookmarks = [
-      { id: 'genesis-1-1', verse: 1 },
-      { id: 'genesis-1-2', verse: 2 },
-    ];
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(isBookmarked(bookmarks, book, 1, 1)).toBe(true);
-    expect(isBookmarked(bookmarks, book, 1, 2)).toBe(true);
-  });
-
-  it('should return false when verse is not bookmarked', () => {
-    const bookmarks = [
-      { id: 'genesis-1-1', verse: 1 },
-    ];
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(isBookmarked(bookmarks, book, 1, 2)).toBe(false);
-    expect(isBookmarked(bookmarks, book, 2, 1)).toBe(false);
-  });
-
-  it('should handle empty bookmarks array', () => {
-    const bookmarks: any[] = [];
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(isBookmarked(bookmarks, book, 1, 1)).toBe(false);
-  });
-});
-
-describe('getHighlight', () => {
-  it('should return highlight color when verse is highlighted', () => {
-    const highlights = {
-      'genesis-1-1': '#ffeb3b',
-      'genesis-1-2': '#4caf50',
-    };
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(getHighlight(highlights, book, 1, 1)).toBe('#ffeb3b');
-    expect(getHighlight(highlights, book, 1, 2)).toBe('#4caf50');
-  });
-
-  it('should return null when verse is not highlighted', () => {
-    const highlights = {
-      'genesis-1-1': '#ffeb3b',
-    };
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(getHighlight(highlights, book, 1, 2)).toBe(null);
-  });
-
-  it('should handle empty highlights object', () => {
-    const highlights: Record<string, string> = {};
-    const book = { name: 'Genesis', chapters: 50 };
-    expect(getHighlight(highlights, book, 1, 1)).toBe(null);
   });
 });
 
@@ -262,7 +190,7 @@ describe('formatVerseForCopy', () => {
 describe('copyVerseToClipboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (navigator.clipboard.writeText as any).mockResolvedValue(undefined);
+    vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined);
   });
 
   it('should copy text to clipboard successfully', async () => {
@@ -275,7 +203,7 @@ describe('copyVerseToClipboard', () => {
 
   it('should return false when clipboard write fails', async () => {
     const text = 'Test verse text';
-    (navigator.clipboard.writeText as any).mockRejectedValue(new Error('Clipboard error'));
+    vi.mocked(navigator.clipboard.writeText).mockRejectedValue(new Error('Clipboard error'));
 
     const result = await copyVerseToClipboard(text);
 
@@ -305,5 +233,31 @@ describe('copyVerseToClipboard', () => {
 
     expect(result).toBe(true);
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(text);
+  });
+});
+
+describe('formatVersesForCopy', () => {
+  const book = { name: 'Genesis', amharic: 'ኦሪት ዘፍጥረት' };
+  const verses = ['A1', 'A2', 'A3', 'A4'];
+  const english = ['E1', 'E2', 'E3', 'E4'];
+
+  it('joins one block per verse in chapter order, regardless of selection order', () => {
+    const result = formatVersesForCopy(book, 1, [3, 1], verses, english, getVerseLabel);
+    expect(result.indexOf('A1')).toBeLessThan(result.indexOf('A3'));
+    expect(result).toContain('ኦሪት ዘፍጥረት 1:1');
+    expect(result).toContain('Genesis 1:3');
+    expect(result).not.toContain('A2');
+    expect(result.split('\n\n').length).toBeGreaterThan(4);
+  });
+
+  it('returns an empty string when nothing is selected', () => {
+    expect(formatVersesForCopy(book, 1, [], verses, english, getVerseLabel)).toBe('');
+  });
+
+  it('skips verses that are empty in both translations', () => {
+    const result = formatVersesForCopy(book, 1, [1, 2, 3], ['A1', '', ''], ['E1', '', ''], getVerseLabel);
+    expect(result).toContain('Genesis 1:1');
+    expect(result).not.toContain('Genesis 1:2');
+    expect(result).not.toContain('Genesis 1:3');
   });
 });

@@ -74,7 +74,6 @@ export default function RootLayout({
                 try {
                   var savedTheme = localStorage.getItem('bible-theme');
                   var themeData = {
-                    'light': { bg: '#ffffff', text: '#111827' },
                     'warm': { bg: '#faf6f0', text: '#3d3222' },
                     'dark': { bg: '#1a1a2e', text: '#e5e7eb' },
                     'midnight': { bg: '#030712', text: '#f3f4f6' },

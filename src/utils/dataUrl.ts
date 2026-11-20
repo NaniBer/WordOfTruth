@@ -1,25 +1,19 @@
-// Base URL for bible data files
-// Set NEXT_PUBLIC_DATA_URL in your .env.local file
-// Example: NEXT_PUBLIC_DATA_URL=https://your-cdn.com/bible-data
+// Base URL for bible data files.
+// Set NEXT_PUBLIC_DATA_URL in .env.local to load data from a CDN, e.g.
+// NEXT_PUBLIC_DATA_URL=https://your-cdn.com/bible-data
 export const DATA_URL_BASE = process.env.NEXT_PUBLIC_DATA_URL || "";
 
-// Helper to build data URLs
+/**
+ * Builds the URL for a data file. Paths are written relative to the project
+ * (`data/<folder>/<n>.json`). With a CDN configured, the `data/` prefix is
+ * dropped because the files live at the root of the CDN bucket.
+ */
 export function getDataUrl(path: string): string {
-  // Remove leading slash if present
-  let cleanPath = path.startsWith("/") ? path.slice(1) : path;
-  console.log(DATA_URL_BASE, cleanPath);
+  const cleanPath = path.replace(/^\//, "");
 
-  if (DATA_URL_BASE) {
-    // Use external CDN - remove 'data/' prefix since files are at root
-    if (cleanPath.startsWith("data/")) {
-      cleanPath = cleanPath.slice(5); // Remove 'data/' prefix
-    }
-    const base = DATA_URL_BASE.endsWith("/")
-      ? DATA_URL_BASE.slice(0, -1)
-      : DATA_URL_BASE;
-    return `${base}/${cleanPath}`;
-  }
+  if (!DATA_URL_BASE) return `/${cleanPath}`;
 
-  // Use local data (for development)
-  return `/${cleanPath}`;
+  const relative = cleanPath.replace(/^data\//, "");
+  const base = DATA_URL_BASE.replace(/\/$/, "");
+  return `${base}/${relative}`;
 }

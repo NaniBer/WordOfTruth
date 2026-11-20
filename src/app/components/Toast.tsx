@@ -1,7 +1,9 @@
+import type { ThemeConfig } from "../constants/themes";
+
 type Props = {
   visible: boolean;
   message: string;
-  t: any;
+  t: ThemeConfig;
 };
 
 export function Toast({ visible, message, t }: Props) {

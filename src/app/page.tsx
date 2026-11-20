@@ -1,633 +1,308 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
-import { amharicBooks } from "./constants/books";
-import { THEMES, Theme } from "./constants/themes";
-import { FONT_SIZES } from "./constants/fonts";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { BIBLE_BOOKS, findBookByName } from "./constants/books";
+import { DEFAULT_FONT_SIZE_IDX, FONT_SIZES } from "./constants/fonts";
+import { THEMES } from "./constants/themes";
+import type { Tab } from "./constants/navigation";
+import type {
+  AmharicVersion,
+  EnglishVersion,
+  TranslationView,
+} from "./constants/translations";
+import type { Book } from "./types/book";
 import { BottomNav } from "./components/BottomNav";
+import { BookPicker } from "./components/BookPicker";
+import { ChapterPickerSheet } from "./components/ChapterPickerSheet";
 import { Header } from "./components/Header";
 import { LoadingScreen } from "./components/LoadingScreen";
-import { SavedVersesView } from "./components/saved/SavedVerses";
-import { SettingsView } from "./components/Settings";
 import { ReaderView } from "./components/reader/ReaderView";
-
-import { ChapterPickerSheet } from "./components/ChapterPickerSheet";
-import { Toast } from "./components/Toast";
-import { StatusBanner } from "./components/StatusBanner";
+import { SavedVersesView } from "./components/saved/SavedVerses";
 import { SearchModal } from "./components/SearchModal";
+import { SettingsView } from "./components/Settings";
+import { SelectionBar } from "./components/SelectionBar";
+import { StatusBanner } from "./components/StatusBanner";
+import { Toast } from "./components/Toast";
+import { useChapterData } from "@/hooks/useChapterData";
+import { useHasMounted } from "@/hooks/useHasMounted";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { useTheme } from "@/hooks/useTheme";
 import { cacheBibleData } from "@/utils/cacheBible";
+import { bookDataUrl, openBibleCache } from "@/utils/bibleData";
 import {
-  loadHighlights,
-  saveHighlightsToStorage,
-  getHighlightId,
-  createHighlightData,
+  copyVerseToClipboard,
+  findNextChapter,
+  findPreviousChapter,
+  formatVerseForCopy,
+  formatVersesForCopy,
+  getVerseLabel,
+} from "@/utils/bibleHelpers";
+import {
+  addHighlight,
   getHighlightColorIdx,
+  getHighlightId,
+  loadHighlights,
   removeHighlightById,
-  type HighlightData,
   type HighlightsMap,
 } from "@/utils/highlights";
-import { saveLastLocation, loadLastLocation } from "@/utils/lastLocation";
-import { saveViewSettings, loadViewSettings } from "@/utils/viewSettings";
-import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
-import { getDataUrl } from "@/utils/dataUrl";
+import { loadLastLocation, saveLastLocation } from "@/utils/lastLocation";
+import { loadViewSettings, saveViewSettings } from "@/utils/viewSettings";
 
+const subscribeToConnectivity = (onChange: () => void) => {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+};
+const useOnlineStatus = () =>
+  useSyncExternalStore(subscribeToConnectivity, () => navigator.onLine, () => true);
+
+const TOAST_DURATION_MS = 2000;
+const REFRESH_DELAY_MS = 500;
+
+/**
+ * The reader reads its saved location and preferences from localStorage when it
+ * first renders, so it only mounts on the client. Until then the loading screen
+ * is shown on both server and client, which avoids a hydration mismatch.
+ */
 export default function Home() {
-  // Load persisted settings first
-  const lastLocation = loadLastLocation();
-  const viewSettings = loadViewSettings();
+  const hasMounted = useHasMounted();
+  if (!hasMounted) return <LoadingScreen t={THEMES.warm} />;
+  return <Reader />;
+}
 
-  const [selectedBook, setSelectedBook] = useState(() => {
-    if (lastLocation) {
-      const book = amharicBooks.find((b) => b.name === lastLocation.bookName);
-      if (book) return book;
-    }
-    return (
-      amharicBooks[0] || {
-        name: "Genesis",
-        amharic: "ኦሪት ዘፍጥረት",
-        abbr: "ዘፍ",
-        chapters: 50,
-      }
-    );
-  });
+function Reader() {
+  // Read once on mount; these seed the initial state below.
+  const [initial] = useState(() => ({
+    location: loadLastLocation(),
+    settings: loadViewSettings(),
+  }));
+
+  const { theme, changeTheme } = useTheme();
+  const t = THEMES[theme];
+
+  // A stored location is only restored if the book exists and the chapter is in range.
+  const initialBook = findBookByName(initial.location?.bookName) ?? BIBLE_BOOKS[0];
+  const [selectedBook, setSelectedBook] = useState<Book>(initialBook);
   const [chapter, setChapter] = useState(() => {
-    return lastLocation?.chapter ?? 1;
+    const stored = initial.location?.chapter ?? 1;
+    return stored <= initialBook.chapters ? stored : 1;
   });
-  const [verses, setVerses] = useState<string[]>([]);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  // Multi-select: a set of verses copied together. Off unless the user turns it on.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [checkedVerses, setCheckedVerses] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>("bible");
+
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [testament, setTestament] = useState<"old" | "new">("old");
-  const [activeTab, setActiveTab] = useState("bible");
-  const [englishVersion, setEnglishVersion] = useState<"niv" | "nlt" | "csb">(
-    viewSettings.englishVersion,
+
+  const [translationView, setTranslationView] = useState<TranslationView>(
+    initial.settings.translationView,
   );
-  const [englishVerses, setEnglishVerses] = useState<string[]>([]);
-  const [amharicVersion, setAmharicVersion] = useState<
-    "amharic_bible" | "amharic_nasb"
-  >(viewSettings.amharicVersion);
+  const [englishVersion, setEnglishVersion] = useState<EnglishVersion>(
+    initial.settings.englishVersion,
+  );
+  const [amharicVersion, setAmharicVersion] = useState<AmharicVersion>(
+    initial.settings.amharicVersion,
+  );
+  const [fontSizeIdx, setFontSizeIdx] = useState(initial.settings.fontSizeIdx);
+  const fontSize = (FONT_SIZES[fontSizeIdx] ?? FONT_SIZES[DEFAULT_FONT_SIZE_IDX]).size;
 
-  const [translationView, setTranslationView] = useState<
-    "amharic" | "english" | "both"
-  >(viewSettings.translationView);
-  const [loading, setLoading] = useState(true);
+  const [highlights, setHighlights] = useState<HighlightsMap>(loadHighlights);
 
-  // Load theme synchronously to prevent flash
-  const [theme, setTheme] = useState<Theme>("warm");
-  const [mounted, setMounted] = useState(false);
-  const [fontSizeIdx, setFontSizeIdx] = useState(viewSettings.fontSizeIdx);
-
-  const [highlights, setHighlights] = useState<HighlightsMap>(() => {
-    if (typeof window === "undefined") return {};
-    return loadHighlights();
-  });
-  const amharicScrollRef = useRef<HTMLDivElement>(null);
-  const englishScrollRef = useRef<HTMLDivElement>(null);
-  const isScrolling = useRef(false);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const touchStartY = useRef(0);
-  const touchCurrentY = useRef(0);
-
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
-    message: "",
-    visible: false,
-  });
-
-  useEffect(() => {
-    const saved = localStorage.getItem("bible-theme") as Theme | null;
-    if (saved && THEMES[saved]) {
-      setTheme(saved);
-    }
-    setMounted(true);
-  }, []);
-
-  const showToast = (message: string) => {
-    setToast({ message, visible: true });
-    setTimeout(() => {
-      setToast({ message: "", visible: false });
-    }, 2000);
-  };
-
-  const contentRef = useRef<HTMLElement>(null);
-
-  const [isOnline, setIsOnline] = useState(true);
-  const [cachingStatus, setCachingStatus] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
   const [isDataCached, setIsDataCached] = useState(false);
-  const [showFeatureModal, setShowFeatureModal] = useState(false);
-  const [forceRefresh, setForceRefresh] = useState(false);
+  const [cachingStatus, setCachingStatus] = useState<string | null>(null);
 
-  const t = THEMES[theme];
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    localStorage.setItem("bible-theme", theme);
-    const cssVars = THEMES[theme].cssVars;
-    document.documentElement.style.setProperty("--theme-bg", cssVars.bg);
-    document.documentElement.style.setProperty("--theme-text", cssVars.text);
-    const meta = document.getElementById("theme-color-meta");
-    if (meta) meta.setAttribute("content", cssVars.bg);
-  }, [theme]);
+  const { verses, englishVerses, loading } = useChapterData({
+    book: selectedBook,
+    chapter,
+    amharicVersion,
+    englishVersion,
+  });
 
-  // Save last location whenever book or chapter changes
+  // Persist reading position and view preferences.
   useEffect(() => {
     saveLastLocation(selectedBook.name, chapter);
   }, [selectedBook.name, chapter]);
 
-  // Save view settings whenever they change
   useEffect(() => {
-    saveViewSettings({
-      translationView,
-      englishVersion,
-      amharicVersion,
-      fontSizeIdx,
-    });
+    saveViewSettings({ translationView, englishVersion, amharicVersion, fontSizeIdx });
   }, [translationView, englishVersion, amharicVersion, fontSizeIdx]);
 
+  // Genesis 1 standing in for "the Bible is cached": it is the first file the reader needs.
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    let active = true;
+    (async () => {
+      try {
+        const cache = await openBibleCache();
+        const hit = await cache.match(bookDataUrl("amharic_bible", 1));
+        if (active) setIsDataCached(!!hit);
+      } catch {
+        if (active) setIsDataCached(false);
+      }
+    })();
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      active = false;
     };
   }, []);
 
-  // Check if bible data is cached
   useEffect(() => {
-    async function checkCache() {
-      try {
-        const cache = await caches.open("wordoftruth-v1");
-        // Check if at least Genesis is cached
-        const testUrl = getDataUrl("data/amharic_bible/1.json");
-        const cached = await cache.match(testUrl);
-        setIsDataCached(!!cached);
-      } catch {
-        setIsDataCached(false);
-      }
-    }
-    checkCache();
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
   }, []);
 
-  const highlightColors = t.highlightColors;
-
-  const goToNextChapter = () => {
-    if (chapter < selectedBook.chapters) {
-      setChapter(chapter + 1);
-      setSelectedVerse(null);
-    } else {
-      const idx = amharicBooks.findIndex((b) => b.name === selectedBook.name);
-      if (idx < amharicBooks.length - 1) {
-        setSelectedBook(amharicBooks[idx + 1]);
-        setChapter(1);
-        setSelectedVerse(null);
-      }
-    }
-  };
-
-  const goToPreviousChapter = () => {
-    if (chapter > 1) {
-      setChapter(chapter - 1);
-      setSelectedVerse(null);
-    } else {
-      const idx = amharicBooks.findIndex((b) => b.name === selectedBook.name);
-      if (idx > 0) {
-        setSelectedBook(amharicBooks[idx - 1]);
-        setChapter(amharicBooks[idx - 1].chapters);
-        setSelectedVerse(null);
-      }
-    }
-  };
-
-  const swipeHandlers = useSwipeNavigation({
-    onSwipeLeft: goToNextChapter,
-    onSwipeRight: goToPreviousChapter,
-  });
-
-  const cacheAllBibleData = () => {
-    cacheBibleData({
-      setStatus: (msg) => {
-        setCachingStatus(msg);
-        // If caching is complete (final success message without "..."), mark as cached
-        if (
-          msg &&
-          msg.includes("Cached") &&
-          msg.includes("files") &&
-          !msg.includes("...")
-        ) {
-          setIsDataCached(true);
-        }
-      },
-    });
-  };
-
-  const saveHighlight = (colorIdx: number | null) => {
-    if (selectedVerse === null) return;
-    const id = getHighlightId(selectedBook.name, chapter, selectedVerse);
-    if (colorIdx === null) {
-      const updated = removeHighlightById(highlights, id);
-      setHighlights(updated);
-    } else {
-      const data = createHighlightData(
-        colorIdx,
-        selectedBook.name,
-        selectedBook.amharic,
-        chapter,
-        selectedVerse,
-        verses[selectedVerse - 1] || "",
-        englishVerses[selectedVerse - 1] || "",
-      );
-      const updated = { ...highlights, [id]: data };
-      setHighlights(updated);
-      saveHighlightsToStorage(updated);
-    }
-  };
-
-  const getHighlightIdx = (verseNum: number): number | null => {
-    return getHighlightColorIdx(
-      highlights,
-      selectedBook.name,
-      chapter,
-      verseNum,
-    );
-  };
-
-  const removeHighlight = (id: string) => {
-    const updated = removeHighlightById(highlights, id);
-    setHighlights(updated);
-  };
-
-  const copyVerse = async (verseNum: number) => {
-    const amharicText = verses[verseNum - 1] || "";
-    const englishText = englishVerses[verseNum - 1] || "";
-    const verseLabel = getVerseLabel(verses, verseNum - 1);
-    const textToCopy = `${selectedBook.amharic} ${chapter}:${verseLabel}\n${selectedBook.name} ${chapter}:${verseLabel}\n\n${amharicText}\n\n${englishText}`;
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(textToCopy);
-        showToast("Copied to clipboard");
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = textToCopy;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const successful = document.execCommand("copy");
-        document.body.removeChild(textArea);
-        if (successful) {
-          showToast("Copied to clipboard");
-        } else {
-          showToast("Failed to copy");
-        }
-      }
-      } catch (err) {
-        showToast("Failed to copy");
-      }
-  };
-
-  const shouldShowVerse = (verses: string[], index: number): boolean => {
-    const verse = verses[index];
-    if (verse !== "" && verse !== "-") return true;
-    return false;
-  };
-
-  const getVerseLabel = (verses: string[], index: number): string => {
-    const current = index + 1;
-    let endVerse = current;
-    for (let i = index + 1; i < verses.length; i++) {
-      if (verses[i] === "" || verses[i] === "-") {
-        endVerse = i + 1;
-      } else {
-        break;
-      }
-    }
-    if (endVerse > current) {
-      return `${current}-${endVerse}`;
-    }
-    return current.toString();
-  };
-
-  const otBooks = amharicBooks.slice(0, 39);
-  const ntBooks = amharicBooks.slice(39);
-  const filteredBooks = testament === "old" ? otBooks : ntBooks;
-
-  const handleRefresh = () => {
-    showToast("Refreshing app...");
-    setTimeout(() => window.location.reload(), 500);
-  };
-
-  useEffect(() => {
-    async function loadChapter() {
-      const bookIndex = amharicBooks.findIndex(
-        (b) => b.name === selectedBook.name,
-      );
-
-      if (bookIndex === -1) return;
-
-      const amharicUrl = getDataUrl(
-        `data/${amharicVersion}/${bookIndex + 1}.json`,
-      );
-      const englishUrl = getDataUrl(
-        `data/english/${englishVersion}/${bookIndex + 1}.json`,
-      );
-
-      let loadedFromCache = false;
-
-      try {
-        const cache = await caches.open("wordoftruth-v1");
-        const [cachedAmharic, cachedEnglish] = await Promise.all([
-          cache.match(amharicUrl),
-          cache.match(englishUrl),
-        ]);
-
-        if (!forceRefresh && cachedAmharic && cachedEnglish) {
-          const [amharicData, englishData] = await Promise.all([
-            cachedAmharic.json(),
-            cachedEnglish.json(),
-          ]);
-
-          const amharicChapter = amharicData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
-          const englishChapter = englishData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
-
-          setVerses(amharicChapter?.verses || []);
-          setEnglishVerses(englishChapter?.verses || []);
-          setLoading(false);
-          loadedFromCache = true;
-
-          // Background refresh
-          Promise.all([
-            fetch(amharicUrl).then(async (r) => {
-              if (r.ok) {
-                const d = await r.json();
-                const c = d.chapters.find(
-                  (c: any) => c.chapter === chapter.toString(),
-                );
-                if (c) setVerses(c.verses || []);
-                await cache.put(amharicUrl, r.clone());
-              }
-            }),
-            fetch(englishUrl).then(async (r) => {
-              if (r.ok) {
-                const d = await r.json();
-                const c = d.chapters.find(
-                  (c: any) => c.chapter === chapter.toString(),
-                );
-                if (c) setEnglishVerses(c.verses || []);
-                await cache.put(englishUrl, r.clone());
-              }
-            }),
-          ]).catch(() => {});
-        }
-      } catch {
-      }
-
-      if (loadedFromCache) return;
-
-      // No complete cache hit, fetch from network
-      setLoading(true);
-      try {
-        const [amharicResponse, englishResponse] = await Promise.all([
-          fetch(amharicUrl),
-          fetch(englishUrl),
-        ]);
-
-        if (amharicResponse.ok) {
-          const amharicData = await amharicResponse.json();
-          const amharicChapter = amharicData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
-          setVerses(amharicChapter?.verses || []);
-        } else {
-          setVerses([]);
-        }
-
-        if (englishResponse.ok) {
-          const englishData = await englishResponse.json();
-          const englishChapter = englishData.chapters.find(
-            (c: any) => c.chapter === chapter.toString(),
-          );
-          setEnglishVerses(englishChapter?.verses || []);
-        } else {
-          setEnglishVerses([]);
-        }
-      } catch (error) {
-        setVerses([]);
-        setEnglishVerses([]);
-      }
-      setLoading(false);
-    }
-    loadChapter();
-  }, [selectedBook, chapter, englishVersion, amharicVersion, forceRefresh]);
-
-  useEffect(() => {
-    if (translationView !== "both") return;
-    const amharicEl = amharicScrollRef.current;
-    const englishEl = englishScrollRef.current;
-    if (!amharicEl || !englishEl) return;
-    const handleAmharicScroll = () => {
-      if (isScrolling.current) return;
-      const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
-      const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
-      if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
-      isScrolling.current = true;
-      const scrollRatio = amharicEl.scrollTop / amharicMaxScroll;
-      englishEl.scrollTop = scrollRatio * englishMaxScroll;
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 50);
-    };
-    const handleEnglishScroll = () => {
-      if (isScrolling.current) return;
-      const amharicMaxScroll = amharicEl.scrollHeight - amharicEl.clientHeight;
-      const englishMaxScroll = englishEl.scrollHeight - englishEl.clientHeight;
-      if (amharicMaxScroll <= 0 || englishMaxScroll <= 0) return;
-      isScrolling.current = true;
-      const scrollRatio = englishEl.scrollTop / englishMaxScroll;
-      amharicEl.scrollTop = scrollRatio * amharicMaxScroll;
-      setTimeout(() => {
-        isScrolling.current = false;
-      }, 50);
-    };
-    amharicEl.addEventListener("scroll", handleAmharicScroll);
-    englishEl.addEventListener("scroll", handleEnglishScroll);
-    return () => {
-      amharicEl.removeEventListener("scroll", handleAmharicScroll);
-      englishEl.removeEventListener("scroll", handleEnglishScroll);
-    };
-  }, [translationView, verses, englishVerses]);
-
-  const handlePrevChapter = () => {
-    if (chapter > 1) {
-      setChapter(chapter - 1);
-    } else if (testament === "new") {
-      setTestament("old");
-      setSelectedBook(otBooks[otBooks.length - 1]);
-      setChapter(otBooks[otBooks.length - 1].chapters);
-    }
-  };
-
-  const handleNextChapter = () => {
-    if (chapter < selectedBook.chapters) {
-      setChapter(chapter + 1);
-    } else if (testament === "old") {
-      setTestament("new");
-      setSelectedBook(ntBooks[0]);
-      setChapter(1);
-    }
-  };
-
-  // Scroll to selected verse after navigation from Saved verses
+  // Scroll to the verse selected from Saved or Search, once the chapter has rendered.
   useEffect(() => {
     if (selectedVerse === null || activeTab !== "bible" || loading) return;
-
-    // Small delay to ensure verses are rendered
     const timeoutId = setTimeout(() => {
-      const verseElement = document.querySelector(
-        `[data-verse-num="${selectedVerse}"]`,
-      );
-      if (verseElement) {
-        verseElement.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Keep it selected but clear the scroll trigger after scrolling
-        // (don't clear selectedVerse as user might want to see it highlighted)
-      }
+      document
+        .querySelector(`[data-verse-num="${selectedVerse}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 100);
-
     return () => clearTimeout(timeoutId);
   }, [selectedVerse, activeTab, loading]);
 
-  const VerseActions = ({ verseNum }: { verseNum: number }) => {
-    const currentHighlightIdx = getHighlightIdx(verseNum);
-    return (
-      <div className="mt-3 pt-3 border-t border-white/[0.08] flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          {highlightColors.map((color, i) => (
-            <button
-              key={i}
-              onClick={(e) => {
-                e.stopPropagation();
-                saveHighlight(i);
-              }}
-              className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                currentHighlightIdx === i
-                  ? "ring-2 ring-offset-1 text-white shadow-md ring-offset-transparent"
-                  : `${t.surfaceActive} ${t.textSecondary}`
-              }`}
-              style={
-                currentHighlightIdx === i
-                  ? {
-                      backgroundColor: color,
-                      boxShadow: `0 0 0 2px ${color}, 0 0 0 4px transparent`,
-                    }
-                  : {}
-              }
-            >
-              <span
-                className="w-3.5 h-3.5 rounded-full inline-block border border-white/20"
-                style={{
-                  backgroundColor: color,
-                  boxShadow: `inset 0 0 0 2px ${currentHighlightIdx === i ? "white" : "transparent"}`,
-                }}
-              />
-            </button>
-          ))}
-          {currentHighlightIdx !== null && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                saveHighlight(null);
-              }}
-              className={`px-3 py-2 rounded-xl ${t.surfaceActive} ${t.textTertiary} text-xs font-semibold transition-all`}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            copyVerse(verseNum);
-          }}
-          className={`w-full py-2.5 rounded-xl ${t.surfaceActive} ${t.primary} text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200`}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-          Copy
-        </button>
-      </div>
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(""), TOAST_DURATION_MS);
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setCheckedVerses([]);
+  };
+
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      exitSelectionMode();
+    } else {
+      setSelectedVerse(null);
+      setSelectionMode(true);
+    }
+  };
+
+  // Single-verse mode opens the action panel; selection mode toggles the verse's checkbox.
+  const tapVerse = (verseNum: number) => {
+    if (selectionMode) {
+      setCheckedVerses((prev) =>
+        prev.includes(verseNum)
+          ? prev.filter((v) => v !== verseNum)
+          : [...prev, verseNum].sort((a, b) => a - b),
+      );
+    } else {
+      setSelectedVerse((current) => (current === verseNum ? null : verseNum));
+    }
+  };
+
+  const copyCheckedVerses = async () => {
+    const text = formatVersesForCopy(
+      selectedBook,
+      chapter,
+      checkedVerses,
+      verses,
+      englishVerses,
+      getVerseLabel,
+    );
+    if (!text) {
+      showToast("Nothing to copy");
+      return;
+    }
+    const ok = await copyVerseToClipboard(text);
+    const count = checkedVerses.length;
+    showToast(ok ? `Copied ${count} ${count === 1 ? "verse" : "verses"}` : "Failed to copy");
+  };
+
+  const navigateTo = (book: Book, chapterNum: number, verse: number | null = null) => {
+    exitSelectionMode();
+    setSelectedBook(book);
+    setChapter(chapterNum);
+    setSelectedVerse(verse);
+  };
+
+  const openVerse = (book: Book, chapterNum: number, verse: number) => {
+    navigateTo(book, chapterNum, verse);
+    setActiveTab("bible");
+  };
+
+  const goToAdjacent = (target: { book: Book; chapter: number } | null) => {
+    if (target) navigateTo(target.book, target.chapter);
+  };
+  const goNext = () => goToAdjacent(findNextChapter(selectedBook, chapter, BIBLE_BOOKS));
+  const goPrev = () => goToAdjacent(findPreviousChapter(selectedBook, chapter, BIBLE_BOOKS));
+  const hasNextChapter = findNextChapter(selectedBook, chapter, BIBLE_BOOKS) !== null;
+  const hasPrevChapter = findPreviousChapter(selectedBook, chapter, BIBLE_BOOKS) !== null;
+  const swipeHandlers = useSwipeNavigation({ onSwipeLeft: goNext, onSwipeRight: goPrev });
+
+  const pickBook = (book: Book) => {
+    // A new book starts at chapter 1; the previous chapter number may not exist in it.
+    navigateTo(book, 1);
+    setShowChapterPicker(true);
+  };
+
+  const pickChapter = (chapterNum: number) => {
+    navigateTo(selectedBook, chapterNum);
+    setShowChapterPicker(false);
+    setShowBookPicker(false);
+  };
+
+  const getHighlightIdx = (verseNum: number) =>
+    getHighlightColorIdx(highlights, selectedBook.name, chapter, verseNum);
+
+  const setVerseHighlight = (verseNum: number, colorIdx: number | null) => {
+    if (colorIdx === null) {
+      const id = getHighlightId(selectedBook.name, chapter, verseNum);
+      setHighlights(removeHighlightById(highlights, id));
+      return;
+    }
+    setHighlights(
+      addHighlight(
+        highlights,
+        selectedBook.name,
+        selectedBook.amharic,
+        chapter,
+        verseNum,
+        colorIdx,
+        verses[verseNum - 1] || "",
+        englishVerses[verseNum - 1] || "",
+      ),
     );
   };
 
-  const VerseItem = ({
-    verse,
-    index,
-    versesArray,
-    isEnglish,
-  }: {
-    verse: string;
-    index: number;
-    versesArray: string[];
-    isEnglish?: boolean;
-  }) => {
-    const verseNum = index + 1;
-    const highlightIdx = getHighlightIdx(verseNum);
-    const isSelected = selectedVerse === verseNum;
-    const label = isEnglish
-      ? verseNum.toString()
-      : getVerseLabel(versesArray, index);
+  const removeSavedHighlight = (id: string) => {
+    setHighlights(removeHighlightById(highlights, id));
+  };
 
-    return (
-      <div
-        key={verseNum}
-        data-verse-num={verseNum}
-        onClick={() =>
-          setSelectedVerse(selectedVerse === verseNum ? null : verseNum)
-        }
-        className={`group py-1 px-2 rounded-2xl transition-all duration-200 cursor-pointer ${
-          isSelected ? t.verseSelected : "hover:bg-white/[0.03]"
-        } ${highlightIdx !== null ? t.highlightBg[highlightIdx] : ""}`}
-      >
-        <div className="flex gap-1">
-          <span
-            className={`verse-number w-8 mt-1 text-sm font-semibold ${isSelected ? t.primary : highlightIdx !== null ? "" : t.textTertiary}`}
-            style={
-              highlightIdx !== null
-                ? { color: highlightColors[highlightIdx] }
-                : undefined
-            }
-          >
-            {label}
-          </span>
-          <div className="flex-1">
-            <p
-              className={`verse-text ${FONT_SIZES[fontSizeIdx].size} ${t.verseText} rounded px-0.5`}
-            >
-              {verse}
-            </p>
-          </div>
-        </div>
-        {isSelected && <VerseActions verseNum={verseNum} />}
-      </div>
+  const copyVerse = async (verseNum: number) => {
+    const text = formatVerseForCopy(
+      selectedBook,
+      chapter,
+      verseNum,
+      verses,
+      englishVerses,
+      getVerseLabel,
     );
+    const ok = await copyVerseToClipboard(text);
+    showToast(ok ? "Copied to clipboard" : "Failed to copy");
+  };
+
+  const cacheAllBibleData = async () => {
+    const { cached } = await cacheBibleData({ setStatus: setCachingStatus });
+    if (cached > 0) setIsDataCached(true);
+  };
+
+  const handleRefresh = () => {
+    showToast("Refreshing app...");
+    setTimeout(() => window.location.reload(), REFRESH_DELAY_MS);
   };
 
   const renderScreen = () => {
@@ -638,62 +313,50 @@ export default function Home() {
         return (
           <SavedVersesView
             highlights={highlights}
-            highlightColors={highlightColors}
-            amharicBooks={amharicBooks}
-            setSelectedBook={setSelectedBook}
-            setChapter={setChapter}
-            setSelectedVerse={setSelectedVerse}
-            setActiveTab={setActiveTab}
-            removeHighlight={removeHighlight}
             t={t}
+            onOpenVerse={openVerse}
+            onRemove={removeSavedHighlight}
           />
         );
-
       case "settings":
         return (
           <SettingsView
             theme={theme}
-            setTheme={setTheme}
+            setTheme={changeTheme}
             fontSizeIdx={fontSizeIdx}
             setFontSizeIdx={setFontSizeIdx}
-            FONT_SIZES={FONT_SIZES}
-            THEMES={THEMES}
             isOnline={isOnline}
-            cacheAllBibleData={cacheAllBibleData}
-            t={t}
             isCached={isDataCached}
-            showFeatureModal={showFeatureModal}
-            setShowFeatureModal={setShowFeatureModal}
+            onCacheBibleData={cacheAllBibleData}
             onCheckUpdates={handleRefresh}
+            t={t}
           />
         );
-
       default:
         return (
           <ReaderView
+            t={t}
+            book={selectedBook}
             translationView={translationView}
             verses={verses}
             englishVerses={englishVerses}
-            shouldShowVerse={shouldShowVerse}
             englishVersion={englishVersion}
             setEnglishVersion={setEnglishVersion}
-            amharicVersion={amharicVersion}
-            setAmharicVersion={setAmharicVersion}
-            t={t}
-            amharicScrollRef={amharicScrollRef}
-            englishScrollRef={englishScrollRef}
-            VerseItem={VerseItem}
-            selectedBook={selectedBook}
+            fontSize={fontSize}
+            selectedVerse={selectedVerse}
+            selectionMode={selectionMode}
+            checkedVerses={checkedVerses}
+            onTapVerse={tapVerse}
+            getHighlightIdx={getHighlightIdx}
+            onHighlight={setVerseHighlight}
+            onCopy={copyVerse}
           />
         );
     }
   };
 
   return (
-    <div
-      className={`flex flex-col h-screen ${t.bg} transition-colors duration-500`}
-    >
-      {/* Header - only show on Bible tab */}
+    <div className={`flex flex-col h-screen ${t.bg} transition-colors duration-500`}>
       {activeTab === "bible" && (
         <Header
           t={t}
@@ -707,155 +370,80 @@ export default function Home() {
           amharicVersion={amharicVersion}
           setAmharicVersion={setAmharicVersion}
           onSearchClick={() => setShowSearch(true)}
-          onPrevChapter={handlePrevChapter}
-          onNextChapter={handleNextChapter}
+          onPrevChapter={goPrev}
+          onNextChapter={goNext}
+          hasPrevChapter={hasPrevChapter}
+          hasNextChapter={hasNextChapter}
+          selectionMode={selectionMode}
+          onToggleSelection={toggleSelectionMode}
         />
       )}
 
-      {/* Status Banners - add top padding when not on bible tab */}
+      {/* Pushed below the fixed top bar when the Bible header is not shown */}
       <div className={activeTab !== "bible" ? "pt-14" : ""}>
         <StatusBanner type="offline" isOnline={isOnline} />
         <StatusBanner type="caching" message={cachingStatus ?? undefined} />
       </div>
 
-      {/* Bible Content */}
-      <main
-        ref={contentRef}
-        className="flex-1 overflow-y-auto px-4 py-2"
-        onTouchStart={swipeHandlers.onTouchStart}
-        onTouchMove={swipeHandlers.onTouchMove}
-        onTouchEnd={swipeHandlers.onTouchEnd}
-      >
+      <main className="flex-1 overflow-y-auto px-4 py-2" {...swipeHandlers}>
         {renderScreen()}
       </main>
 
-      {/* Bottom Navigation */}
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} t={t} />
-
-      {/* Book Picker */}
-      {showBookPicker && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowBookPicker(false)}
-          />
-          <div
-            ref={sheetRef}
-            className={`relative w-full max-w-lg ${t.bgSecondary} backdrop-blur-2xl rounded-t-3xl max-h-[85vh] overflow-hidden animate-slide-up border-t ${t.borderLight}`}
-            onTouchStart={(e) => {
-              touchStartY.current = e.touches[0].clientY;
-            }}
-            onTouchMove={(e) => {
-              touchCurrentY.current = e.touches[0].clientY;
-              const deltaY = touchCurrentY.current - touchStartY.current;
-              if (deltaY > 0 && sheetRef.current) {
-                sheetRef.current.style.transform = `translateY(${deltaY}px)`;
-              }
-            }}
-            onTouchEnd={() => {
-              const deltaY = touchCurrentY.current - touchStartY.current;
-              if (deltaY > 100) {
-                setShowBookPicker(false);
-              } else if (sheetRef.current) {
-                sheetRef.current.style.transform = "";
-              }
-            }}
-          >
-            <div className="flex justify-center pt-3 pb-1">
-              <div
-                className={`w-10 h-1 rounded-full ${theme === "warm" ? "bg-gray-300" : "bg-white/20"}`}
-              />
-            </div>
-            <div
-              className={`flex items-center justify-between px-5 py-3 border-b ${t.border}`}
-            >
-              <h2 className={`${t.text} text-lg font-bold`}>Select Book</h2>
-              <button
-                onClick={() => setShowBookPicker(false)}
-                className={`w-8 h-8 rounded-full ${t.surface} flex items-center justify-center ${t.textSecondary}`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex px-4 py-2.5 gap-2">
-              {(["old", "new"] as const).map((t2) => (
-                <button
-                  key={t2}
-                  onClick={() => setTestament(t2)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    testament === t2
-                      ? `${t.buttonBg} text-white shadow-lg`
-                      : `${t.surface} ${t.textSecondary}`
-                  }`}
-                >
-                  {t2 === "old" ? "Old Testament" : "New Testament"}
-                </button>
-              ))}
-            </div>
-            <div className="px-4 pb-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-2 gap-2">
-                {filteredBooks.map((book) => (
-                  <button
-                    key={book.name}
-                    onClick={() => {
-                      setSelectedBook(book);
-                      setShowChapterPicker(true);
-                    }}
-                    className={`p-3.5 rounded-xl text-left transition-all duration-200 ${
-                      selectedBook.name === book.name
-                        ? `${t.buttonBg} text-white shadow-lg`
-                        : `${t.surface} ${t.text} hover:${t.surfaceActive}`
-                    }`}
-                  >
-                    <div className="text-sm font-semibold">
-                      {translationView === "amharic" ? book.amharic : book.name}
-                    </div>
-                    <div
-                      className={`text-xs mt-0.5 ${selectedBook.name === book.name ? "text-white/70" : theme === "warm" ? "text-gray-400" : "text-gray-500"}`}
-                    >
-                      {book.chapters}{" "}
-                      {translationView === "amharic" ? "ክፍሎች" : "chapters"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+      {selectionMode && (
+        <SelectionBar
+          t={t}
+          count={checkedVerses.length}
+          onCopy={copyCheckedVerses}
+          onCancel={exitSelectionMode}
+        />
       )}
 
-      {/* Chapter Picker */}
-      <ChapterPickerSheet
-        open={showChapterPicker}
-        selectedBook={selectedBook}
-        chapter={chapter}
-        setChapter={setChapter}
-        setShowChapterPicker={setShowChapterPicker}
-        setShowBookPicker={setShowBookPicker}
-        translationView={translationView}
-        theme={theme}
-        t={t}
-      />
-
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={showSearch}
-        onClose={() => setShowSearch(false)}
-        t={t}
-        books={amharicBooks}
-        onSelectResult={(book, chapterNum, verse) => {
-          setSelectedBook(book);
-          setChapter(chapterNum);
-          setSelectedVerse(verse);
-          setActiveTab("bible");
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          exitSelectionMode();
+          setActiveTab(tab);
         }}
-        translationView={translationView}
-        amharicVersion={amharicVersion}
-        englishVersion={englishVersion}
+        t={t}
       />
 
-      {/* Toast */}
-      <Toast visible={toast.visible} message={toast.message} t={t} />
+      {showBookPicker && (
+        <BookPicker
+          t={t}
+          selectedBook={selectedBook}
+          translationView={translationView}
+          onSelectBook={pickBook}
+          onClose={() => setShowBookPicker(false)}
+        />
+      )}
+
+      {showChapterPicker && (
+        <ChapterPickerSheet
+          t={t}
+          book={selectedBook}
+          chapter={chapter}
+          translationView={translationView}
+          onSelectChapter={pickChapter}
+          onBack={() => setShowChapterPicker(false)}
+          onDone={() => {
+            setShowChapterPicker(false);
+            setShowBookPicker(false);
+          }}
+        />
+      )}
+
+      {showSearch && (
+        <SearchModal
+          t={t}
+          onClose={() => setShowSearch(false)}
+          onSelectResult={openVerse}
+          translationView={translationView}
+          amharicVersion={amharicVersion}
+          englishVersion={englishVersion}
+        />
+      )}
+
+      <Toast visible={toastMessage !== ""} message={toastMessage} t={t} />
     </div>
   );
 }

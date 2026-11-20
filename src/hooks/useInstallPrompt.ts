@@ -1,71 +1,64 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+// Non-standard properties that older iOS Safari and IE expose on the globals.
+type IOSNavigator = Navigator & { standalone?: boolean };
+type LegacyWindow = Window & { MSStream?: unknown };
+
+const noopSubscribe = () => () => {};
+const detectIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as LegacyWindow).MSStream;
+const detectStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches ||
+  (navigator as IOSNavigator).standalone === true;
+
 export function useInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isInStandaloneMode, setIsInStandaloneMode] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installedThisSession, setInstalledThisSession] = useState(false);
+  const isIOS = useSyncExternalStore(noopSubscribe, detectIOS, () => false);
+  const isInStandaloneMode = useSyncExternalStore(noopSubscribe, detectStandalone, () => false);
+  const isInstalled = installedThisSession || isInStandaloneMode;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const isIOSDevice =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-    setIsInStandaloneMode(isStandalone);
-
-    if (isStandalone) {
-      setIsInstalled(true);
-    }
-
-    const handler = (e: Event) => {
+    const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    window.addEventListener("appinstalled", () => {
-      setIsInstalled(true);
+    const handleInstalled = () => {
+      setInstalledThisSession(true);
       setDeferredPrompt(null);
-    });
+    };
 
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleInstalled);
     };
   }, []);
 
   const installApp = useCallback(async () => {
     if (!deferredPrompt) return false;
 
-    deferredPrompt.prompt();
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
-      setIsInstalled(true);
+      setInstalledThisSession(true);
       setDeferredPrompt(null);
       return true;
     }
-
     return false;
   }, [deferredPrompt]);
 
-  const canInstall = !isInstalled && (!!deferredPrompt || isIOS);
-
   return {
-    canInstall,
+    canInstall: !isInstalled && (!!deferredPrompt || isIOS),
     isInstalled,
     isIOS,
     isInStandaloneMode,

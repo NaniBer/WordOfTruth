@@ -1,4 +1,6 @@
-export const BOOKS_DATA = [
+import type { Book } from "../types/book";
+
+const BOOKS_DATA = [
   { amharic: "ኦሪት ዘፍጥረት", english: "Genesis", abbr: "ዘፍ", abbrEnglish: "Gen", chapters: 50 },
   { amharic: "ኦሪት ዘጸአት", english: "Exodus", abbr: "ዘጸ", abbrEnglish: "Exod", chapters: 40 },
   { amharic: "ኦሪት ዘሌዋውያን", english: "Leviticus", abbr: "ዘሌ", abbrEnglish: "Lev", chapters: 27 },
@@ -115,10 +117,29 @@ export const BOOKS_DATA = [
   { amharic: "የዮሐንስ ራእይ", english: "Revelation", abbr: "ራእ", abbrEnglish: "Rev", chapters: 22 },
 ];
 
-export const amharicBooks = BOOKS_DATA.map((book) => ({
+/** Canonical Bible book order. `name` is the English name and is used as the book id. */
+export const BIBLE_BOOKS: Book[] = BOOKS_DATA.map((book) => ({
   name: book.english,
   amharic: book.amharic,
   abbr: book.abbr,
   abbrEnglish: book.abbrEnglish,
   chapters: book.chapters,
 }));
+
+export type Testament = "old" | "new";
+
+/** Number of books in the Old Testament (Genesis through Malachi). */
+export const OLD_TESTAMENT_BOOK_COUNT = 39;
+
+export const getTestament = (book: Pick<Book, "name">): Testament =>
+  BIBLE_BOOKS.findIndex((b) => b.name === book.name) < OLD_TESTAMENT_BOOK_COUNT
+    ? "old"
+    : "new";
+
+export const booksForTestament = (testament: Testament): Book[] =>
+  testament === "old"
+    ? BIBLE_BOOKS.slice(0, OLD_TESTAMENT_BOOK_COUNT)
+    : BIBLE_BOOKS.slice(OLD_TESTAMENT_BOOK_COUNT);
+
+export const findBookByName = (name: string | undefined): Book | undefined =>
+  name === undefined ? undefined : BIBLE_BOOKS.find((b) => b.name === name);
