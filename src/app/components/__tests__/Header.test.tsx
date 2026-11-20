@@ -23,8 +23,6 @@ function setup(overrides: Partial<Parameters<typeof Header>[0]> = {}) {
     onNextChapter: vi.fn(),
     hasPrevChapter: true,
     hasNextChapter: true,
-    selectionMode: false,
-    onToggleSelection: vi.fn(),
     ...overrides,
   };
   render(<Header {...props} />);
@@ -61,18 +59,6 @@ describe("Header", () => {
     const props = setup();
     fireEvent.click(screen.getByText("ዘፍ"));
     expect(props.setShowBookPicker).toHaveBeenCalledWith(true);
-  });
-
-  it("reports selection mode through aria-pressed and toggles it", () => {
-    const off = setup({ selectionMode: false });
-    expect(screen.getByRole("button", { name: "Select multiple verses" })).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(screen.getByRole("button", { name: "Select multiple verses" }));
-    expect(off.onToggleSelection).toHaveBeenCalled();
-  });
-
-  it("shows the Cancel label while selection mode is on", () => {
-    setup({ selectionMode: true });
-    expect(screen.getByRole("button", { name: "Cancel selection" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("calls onSearchClick from the search button", () => {

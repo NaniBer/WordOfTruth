@@ -12,14 +12,14 @@ export function SelectionBar({ t, count, onCopy, onCancel }: SelectionBarProps) 
   return (
     <div className={`flex items-center justify-between gap-3 px-4 py-2.5 ${t.navBg} backdrop-blur-2xl border-t ${t.border}`}>
       <span className={`${t.text} text-sm font-semibold`}>
-        {count === 0 ? "Tap verses to select" : `${count} selected`}
+        {count} selected
       </span>
       <div className="flex items-center gap-2">
         <button
           onClick={onCancel}
           className={`px-3 py-2 rounded-xl ${t.surface} ${t.textSecondary} text-sm font-semibold`}
         >
-          Cancel
+          Deselect all
         </button>
         <button
           onClick={onCopy}

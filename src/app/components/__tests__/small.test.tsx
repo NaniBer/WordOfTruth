@@ -7,19 +7,13 @@ import { LoadingScreen } from "../LoadingScreen";
 import { THEMES } from "@/app/constants/themes";
 
 describe("SelectionBar", () => {
-  it("prompts for a tap when nothing is selected and disables Copy", () => {
-    render(<SelectionBar t={THEMES.warm} count={0} onCopy={vi.fn()} onCancel={vi.fn()} />);
-    expect(screen.getByText("Tap verses to select")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copy" })).toBeDisabled();
-  });
-
   it("shows the count and fires copy and cancel", () => {
     const onCopy = vi.fn();
     const onCancel = vi.fn();
     render(<SelectionBar t={THEMES.warm} count={3} onCopy={onCopy} onCancel={onCancel} />);
     expect(screen.getByText("3 selected")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Deselect all" }));
     expect(onCopy).toHaveBeenCalledTimes(1);
     expect(onCancel).toHaveBeenCalledTimes(1);
   });

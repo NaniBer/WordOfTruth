@@ -1,4 +1,4 @@
-import { ChevronDown, ListChecks, Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import type { ThemeConfig } from "../constants/themes";
 import {
   AMHARIC_VERSION_OPTIONS,
@@ -28,8 +28,6 @@ interface HeaderProps {
   hasPrevChapter: boolean;
   /** False at the end of the Bible; the Next button is disabled. */
   hasNextChapter: boolean;
-  selectionMode: boolean;
-  onToggleSelection: () => void;
 }
 
 const VIEW_OPTIONS: { value: TranslationView; label: string }[] = [
@@ -60,8 +58,6 @@ export const Header = ({
   onNextChapter,
   hasPrevChapter,
   hasNextChapter,
-  selectionMode,
-  onToggleSelection,
 }: HeaderProps) => {
   const showEnglishVersion = translationView === "english" || translationView === "both";
   const showAmharicVersion = translationView === "amharic" || translationView === "both";
@@ -86,25 +82,13 @@ export const Header = ({
           <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
         </button>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={onToggleSelection}
-            aria-label={selectionMode ? "Cancel selection" : "Select multiple verses"}
-            aria-pressed={selectionMode}
-            className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${
-              selectionMode ? t.primary : t.textSecondary
-            }`}
-          >
-            <ListChecks className="w-[20px] h-[20px]" />
-          </button>
-          <button
-            onClick={onSearchClick}
-            aria-label="Search"
-            className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
-          >
-            <Search className="w-[20px] h-[20px]" />
-          </button>
-        </div>
+        <button
+          onClick={onSearchClick}
+          aria-label="Search"
+          className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
+        >
+          <Search className="w-[20px] h-[20px]" />
+        </button>
       </header>
 
       {/* Previous / next chapter */}
