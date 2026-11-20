@@ -4,36 +4,33 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { ThemeConfig } from "../constants/themes";
 
-interface SelectOption {
-  value: string;
+interface SelectOption<T extends string> {
+  value: T;
   label: string;
 }
 
-interface CustomSelectProps {
-  value: string;
-  options: SelectOption[];
-  onChange: (value: string) => void;
+interface CustomSelectProps<T extends string> {
+  value: T;
+  options: SelectOption<T>[];
+  onChange: (value: T) => void;
   t: ThemeConfig;
   minWidth?: string;
 }
 
-export function CustomSelect({
+export function CustomSelect<T extends string>({
   value,
   options,
   onChange,
   t,
   minWidth = "60px",
-}: CustomSelectProps) {
+}: CustomSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find((opt) => opt.value === value);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -45,7 +42,7 @@ export function CustomSelect({
   return (
     <div ref={containerRef} className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((open) => !open)}
         className={`${t.bgSecondary} ${t.text} text-xs rounded-lg pl-3 pr-2 py-2 border ${t.border} cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-between gap-2`}
         style={{ minWidth }}
       >

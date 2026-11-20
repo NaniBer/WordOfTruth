@@ -54,3 +54,6 @@ upload-to-r2.sh
 
 # vitest config
 vitest.config.ts
+
+# Playwright run output
+/test-results/

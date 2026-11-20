@@ -1,9 +1,9 @@
-import { NAV_ITEMS } from "../constants/navigation";
+import { NAV_ITEMS, type Tab } from "../constants/navigation";
 import { ThemeConfig } from "../constants/themes";
 
 interface BottomNavProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
   t: ThemeConfig;
 }
 

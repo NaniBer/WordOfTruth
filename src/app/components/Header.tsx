@@ -1,23 +1,48 @@
-import { ChevronDown, Search } from "lucide-react";
-import { ThemeConfig } from "../constants/themes";
+import { ChevronDown, ListChecks, Search } from "lucide-react";
+import type { ThemeConfig } from "../constants/themes";
+import {
+  AMHARIC_VERSION_OPTIONS,
+  ENGLISH_VERSION_OPTIONS,
+  type AmharicVersion,
+  type EnglishVersion,
+  type TranslationView,
+} from "../constants/translations";
+import type { Book } from "../types/book";
 import { CustomSelect } from "./CustomSelect";
-import { Book } from "../types/book";
 
 interface HeaderProps {
   t: ThemeConfig;
   selectedBook: Book;
   chapter: number;
-  translationView: "amharic" | "english" | "both";
-  setTranslationView: (view: "amharic" | "english" | "both") => void;
+  translationView: TranslationView;
+  setTranslationView: (view: TranslationView) => void;
   setShowBookPicker: (show: boolean) => void;
-  englishVersion: "niv" | "nlt" | "csb";
-  setEnglishVersion: (version: "niv" | "nlt" | "csb") => void;
-  amharicVersion: "amharic_bible" | "amharic_nasb";
-  setAmharicVersion: (version: "amharic_bible" | "amharic_nasb") => void;
-  onSearchClick?: () => void;
-  onPrevChapter?: () => void;
-  onNextChapter?: () => void;
+  englishVersion: EnglishVersion;
+  setEnglishVersion: (version: EnglishVersion) => void;
+  amharicVersion: AmharicVersion;
+  setAmharicVersion: (version: AmharicVersion) => void;
+  onSearchClick: () => void;
+  onPrevChapter: () => void;
+  onNextChapter: () => void;
+  /** False at the start of the Bible; the Prev button is disabled. */
+  hasPrevChapter: boolean;
+  /** False at the end of the Bible; the Next button is disabled. */
+  hasNextChapter: boolean;
+  selectionMode: boolean;
+  onToggleSelection: () => void;
 }
+
+const VIEW_OPTIONS: { value: TranslationView; label: string }[] = [
+  { value: "amharic", label: "አማ" },
+  { value: "both", label: "አማ+EN" },
+  { value: "english", label: "EN" },
+];
+
+const ChevronIcon = ({ className, d }: { className: string; d: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />
+  </svg>
+);
 
 export const Header = ({
   t,
@@ -33,10 +58,17 @@ export const Header = ({
   onSearchClick,
   onPrevChapter,
   onNextChapter,
+  hasPrevChapter,
+  hasNextChapter,
+  selectionMode,
+  onToggleSelection,
 }: HeaderProps) => {
+  const showEnglishVersion = translationView === "english" || translationView === "both";
+  const showAmharicVersion = translationView === "amharic" || translationView === "both";
+
   return (
     <>
-      {/* Main header - book, chapter, search */}
+      {/* Book, chapter and search */}
       <header
         className={`relative z-30 flex items-center justify-between px-4 py-2 ${t.navBg} backdrop-blur-2xl border-b ${t.border}`}
         style={{ paddingTop: 44 }}
@@ -50,130 +82,91 @@ export const Header = ({
               ? selectedBook.abbrEnglish
               : selectedBook.abbr || selectedBook.amharic.slice(0, 4)}
           </span>
-
           <span className={`${t.primary} text-sm font-medium`}>{chapter}</span>
-
           <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
         </button>
 
-        <button
-          onClick={onSearchClick}
-          className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
-        >
-          <Search className="w-[20px] h-[20px]" />
-        </button>
-      </header>
-
-      {/* Chapter Navigation */}
-      {(onPrevChapter || onNextChapter) && (
-        <div
-          className={`flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}
-        >
-          {/* Prev */}
+        <div className="flex items-center gap-1">
           <button
-            onClick={onPrevChapter}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
+            onClick={onToggleSelection}
+            aria-label={selectionMode ? "Cancel selection" : "Select multiple verses"}
+            aria-pressed={selectionMode}
+            className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${
+              selectionMode ? t.primary : t.textSecondary
+            }`}
           >
-            <svg
-              className={`w-4 h-4 ${t.textSecondary}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span className={`${t.textSecondary} text-sm font-medium`}>
-              Prev
-            </span>
+            <ListChecks className="w-[20px] h-[20px]" />
           </button>
-
-          {/* Center info */}
-          <div className="text-center">
-            <span className={`${t.textTertiary} text-xs`}>
-              Ch. {chapter} / {selectedBook.chapters}
-            </span>
-          </div>
-
-          {/* Next */}
           <button
-            onClick={onNextChapter}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200`}
+            onClick={onSearchClick}
+            aria-label="Search"
+            className={`p-2 rounded-xl hover:bg-white/[0.06] transition-all ${t.textSecondary}`}
           >
-            <span className={`${t.textSecondary} text-sm font-medium`}>
-              Next
-            </span>
-            <svg
-              className={`w-4 h-4 ${t.textSecondary}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <Search className="w-[20px] h-[20px]" />
           </button>
         </div>
-      )}
+      </header>
 
-      {/* Controls row - language selector + version selectors */}
-      <div
-        className={`flex items-center justify-between px-4 py-2 ${t.navBg} border-b ${t.border}`}
-      >
-        {/* Language selector */}
-        <div
-          className={`flex items-center gap-0.5 ${t.bgTertiary} rounded-xl p-1 backdrop-blur-sm`}
+      {/* Previous / next chapter */}
+      <div className={`flex items-center justify-between px-5 py-2 ${t.bgSecondary} backdrop-blur-xl border-b ${t.border}`}>
+        <button
+          onClick={onPrevChapter}
+          disabled={!hasPrevChapter}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none`}
         >
-          {(["amharic", "both", "english"] as const).map((view) => (
+          <ChevronIcon className={`w-4 h-4 ${t.textSecondary}`} d="M15 19l-7-7 7-7" />
+          <span className={`${t.textSecondary} text-sm font-medium`}>Prev</span>
+        </button>
+
+        <div className="text-center">
+          <span className={`${t.textTertiary} text-xs`}>
+            Ch. {chapter} / {selectedBook.chapters}
+          </span>
+        </div>
+
+        <button
+          onClick={onNextChapter}
+          disabled={!hasNextChapter}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${t.surface} hover:${t.surfaceActive} transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none`}
+        >
+          <span className={`${t.textSecondary} text-sm font-medium`}>Next</span>
+          <ChevronIcon className={`w-4 h-4 ${t.textSecondary}`} d="M9 5l7 7-7 7" />
+        </button>
+      </div>
+
+      {/* Language selector and translation versions */}
+      <div className={`flex items-center justify-between px-4 py-2 ${t.navBg} border-b ${t.border}`}>
+        <div className={`flex items-center gap-0.5 ${t.bgTertiary} rounded-xl p-1 backdrop-blur-sm`}>
+          {VIEW_OPTIONS.map((view) => (
             <button
-              key={view}
-              onClick={() => setTranslationView(view)}
+              key={view.value}
+              onClick={() => setTranslationView(view.value)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                translationView === view
+                translationView === view.value
                   ? `${t.buttonBg} text-white shadow-md`
                   : `${t.textTertiary} hover:${t.textSecondary}`
               }`}
             >
-              {view === "amharic" ? "አማ" : view === "both" ? "አማ+EN" : "EN"}
+              {view.label}
             </button>
           ))}
         </div>
 
-        {/* Version selectors */}
         <div className="flex items-center gap-2">
-          {(translationView === "english" || translationView === "both") && (
+          {showEnglishVersion && (
             <CustomSelect
               value={englishVersion}
-              options={[
-                { value: "niv", label: "NIV" },
-                { value: "nlt", label: "NLT" },
-                { value: "csb", label: "CSB" },
-              ]}
-              onChange={(value) =>
-                setEnglishVersion(value as "niv" | "nlt" | "csb")
-              }
+              options={ENGLISH_VERSION_OPTIONS}
+              onChange={setEnglishVersion}
               t={t}
               minWidth="60px"
             />
           )}
-          {(translationView === "amharic" || translationView === "both") && (
+          {showAmharicVersion && (
             <CustomSelect
               value={amharicVersion}
-              options={[
-                { value: "amharic_bible", label: "Amh 1954" },
-                { value: "amharic_nasb", label: "NASB" },
-              ]}
-              onChange={(value) =>
-                setAmharicVersion(value as "amharic_bible" | "amharic_nasb")
-              }
+              options={AMHARIC_VERSION_OPTIONS}
+              onChange={setAmharicVersion}
               t={t}
               minWidth="75px"
             />
