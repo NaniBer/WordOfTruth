@@ -88,6 +88,29 @@ describe("reader (page)", () => {
     await waitFor(() => expect(chapterLabel()).toBe("Ch. 50 / 50"));
   });
 
+  it("backing out of a book keeps the current chapter (regression: picking a book moved the reader)", async () => {
+    setLocation("Genesis", 50);
+    render(<Home />);
+    await waitFor(() => expect(chapterLabel()).toBe("Ch. 50 / 50"));
+    fireEvent.click(screen.getByText("ዘፍ"));
+    fireEvent.click(screen.getByRole("button", { name: /ዘጸአት/ })); // Exodus has 40 chapters
+    expect(screen.getByText("Back", { exact: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(chapterLabel()).toBe("Ch. 50 / 50");
+    expect(screen.getByText("ዘፍ")).toBeInTheDocument();
+  });
+
+  it("picking a chapter in another book moves there", async () => {
+    setLocation("Genesis", 50);
+    render(<Home />);
+    await waitFor(() => expect(chapterLabel()).toBe("Ch. 50 / 50"));
+    fireEvent.click(screen.getByText("ዘፍ"));
+    fireEvent.click(screen.getByRole("button", { name: /ዘጸአት/ }));
+    fireEvent.click(screen.getByRole("button", { name: "2" }));
+    await waitFor(() => expect(chapterLabel()).toBe("Ch. 2 / 40"));
+    expect(screen.getByText("ዘጸ")).toBeInTheDocument();
+  });
+
   it("disables Prev at Genesis 1", async () => {
     setLocation("Genesis", 1);
     render(<Home />);

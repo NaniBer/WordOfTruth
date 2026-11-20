@@ -98,6 +98,8 @@ function Reader() {
 
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);
+  // A book chosen in the picker. It only becomes the current book once a chapter is picked.
+  const [pendingBook, setPendingBook] = useState<Book | null>(null);
   const [showSearch, setShowSearch] = useState(false);
 
   const [translationView, setTranslationView] = useState<TranslationView>(
@@ -243,16 +245,27 @@ function Reader() {
   const hasPrevChapter = findPreviousChapter(selectedBook, chapter, BIBLE_BOOKS) !== null;
   const swipeHandlers = useSwipeNavigation({ onSwipeLeft: goNext, onSwipeRight: goPrev });
 
+  // Choosing a book only opens its chapters; the reader stays where it is until a chapter is picked.
   const pickBook = (book: Book) => {
-    // A new book starts at chapter 1; the previous chapter number may not exist in it.
-    navigateTo(book, 1);
+    setPendingBook(book);
     setShowChapterPicker(true);
   };
 
   const pickChapter = (chapterNum: number) => {
-    navigateTo(selectedBook, chapterNum);
+    if (pendingBook) navigateTo(pendingBook, chapterNum);
+    closePickers();
+  };
+
+  const closePickers = () => {
+    setPendingBook(null);
     setShowChapterPicker(false);
     setShowBookPicker(false);
+  };
+
+  // Backing out of the chapter list returns to the book list and keeps the current reading position.
+  const backToBookList = () => {
+    setPendingBook(null);
+    setShowChapterPicker(false);
   };
 
   const getHighlightIdx = (verseNum: number) =>
@@ -413,22 +426,20 @@ function Reader() {
           selectedBook={selectedBook}
           translationView={translationView}
           onSelectBook={pickBook}
-          onClose={() => setShowBookPicker(false)}
+          onClose={closePickers}
         />
       )}
 
-      {showChapterPicker && (
+      {showChapterPicker && pendingBook && (
         <ChapterPickerSheet
           t={t}
-          book={selectedBook}
-          chapter={chapter}
+          book={pendingBook}
+          // No chapter is highlighted while browsing a book that isn't the current one.
+          chapter={pendingBook.name === selectedBook.name ? chapter : 0}
           translationView={translationView}
           onSelectChapter={pickChapter}
-          onBack={() => setShowChapterPicker(false)}
-          onDone={() => {
-            setShowChapterPicker(false);
-            setShowBookPicker(false);
-          }}
+          onBack={backToBookList}
+          onDone={closePickers}
         />
       )}
 

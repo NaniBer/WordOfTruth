@@ -86,6 +86,16 @@ test.describe('reader', () => {
     expect(clip).not.toContain('Genesis 1:2');
   });
 
+  test('backing out of the book picker keeps the current chapter', async ({ page }) => {
+    await openAt(page, 'Psalms', 62);
+    await page.locator('header button').first().click();
+    await page.getByRole('button', { name: /ሩት/ }).click(); // Ruth has only 4 chapters
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await page.mouse.click(20, 20); // tap outside the book list to close it
+    await expect(page.getByText('Ch. 62 / 150')).toBeVisible();
+    expect(await headerBook(page)).toContain('መዝ');
+  });
+
   test('changing chapter leaves selection mode', async ({ page }) => {
     await openAt(page, 'Genesis', 1);
     await page.getByRole('button', { name: 'Select multiple verses' }).click();
