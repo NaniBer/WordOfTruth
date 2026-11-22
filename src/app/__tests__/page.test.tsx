@@ -149,9 +149,9 @@ describe("reader (page)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const text = writeText.mock.calls[0][0] as string;
-    expect(text.indexOf("Genesis 1:1")).toBeLessThan(text.indexOf("Genesis 1:4"));
-    expect(text).toContain("en G1:4");
-    expect(text).not.toContain("Genesis 1:2");
+    expect(text).toContain("Genesis 1\n1.");
+    expect(text.indexOf("\n1.")).toBeLessThan(text.indexOf("\n4."));
+    expect(text).not.toContain("\n2.");
     expect(await screen.findByText("Copied 2 verses")).toBeInTheDocument();
   });
 

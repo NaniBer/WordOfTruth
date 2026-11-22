@@ -198,7 +198,6 @@ function Reader() {
       checkedVerses,
       verses,
       englishVerses,
-      getVerseLabel,
     );
     if (!text) {
       showToast("Nothing to copy");

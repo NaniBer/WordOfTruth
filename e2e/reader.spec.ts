@@ -80,9 +80,9 @@ test.describe('reader', () => {
     await page.getByRole('button', { name: 'Copy', exact: true }).click();
     await expect(page.getByText('Copied 2 verses')).toBeVisible();
     const clip = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clip.indexOf('Genesis 1:1')).toBeGreaterThanOrEqual(0);
-    expect(clip.indexOf('Genesis 1:1')).toBeLessThan(clip.indexOf('Genesis 1:3'));
-    expect(clip).not.toContain('Genesis 1:2');
+    expect(clip).toContain('Genesis 1\n1.');
+    expect(clip.indexOf('\n1.')).toBeLessThan(clip.indexOf('\n3.'));
+    expect(clip).not.toContain('\n2.');
   });
 
   test('backing out of the book picker keeps the current chapter', async ({ page }) => {
