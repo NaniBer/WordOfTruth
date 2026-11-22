@@ -66,8 +66,9 @@ export const formatVerseForCopy = (
 };
 
 /**
- * Formats several verses for copying, in chapter order, one block per verse.
- * Verses that are empty in both translations are left out.
+ * Formats several verses for copying: an Amharic block, then an English block.
+ * Each block has one chapter heading followed by the numbered verses in
+ * chapter order. Verses that are empty in a translation are left out of its block.
  */
 export const formatVersesForCopy = (
   book: Pick<Book, "name" | "amharic">,
@@ -75,13 +76,23 @@ export const formatVersesForCopy = (
   verseNums: readonly number[],
   verses: string[],
   englishVerses: string[],
-  getLabel: (verses: string[], index: number) => string,
-): string =>
-  [...verseNums]
-    .sort((a, b) => a - b)
-    .filter((n) => verses[n - 1] || englishVerses[n - 1])
-    .map((n) => formatVerseForCopy(book, chapter, n, verses, englishVerses, getLabel))
+): string => {
+  const sorted = [...verseNums].sort((a, b) => a - b);
+
+  const block = (heading: string, texts: string[]): string | null => {
+    const lines = sorted
+      .filter((n) => texts[n - 1])
+      .map((n) => `${n}.${texts[n - 1]}`);
+    return lines.length > 0 ? [heading, ...lines].join("\n") : null;
+  };
+
+  return [
+    block(`${book.amharic} ${chapter}`, verses),
+    block(`${book.name} ${chapter}`, englishVerses),
+  ]
+    .filter((section): section is string => section !== null)
     .join("\n\n");
+};
 
 /** Legacy path for browsers or non-secure origins where the async Clipboard API is unavailable. */
 const copyWithExecCommand = (text: string): boolean => {

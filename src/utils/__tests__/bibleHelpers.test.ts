@@ -241,23 +241,29 @@ describe('formatVersesForCopy', () => {
   const verses = ['A1', 'A2', 'A3', 'A4'];
   const english = ['E1', 'E2', 'E3', 'E4'];
 
-  it('joins one block per verse in chapter order, regardless of selection order', () => {
-    const result = formatVersesForCopy(book, 1, [3, 1], verses, english, getVerseLabel);
-    expect(result.indexOf('A1')).toBeLessThan(result.indexOf('A3'));
-    expect(result).toContain('ኦሪት ዘፍጥረት 1:1');
-    expect(result).toContain('Genesis 1:3');
-    expect(result).not.toContain('A2');
-    expect(result.split('\n\n').length).toBeGreaterThan(4);
+  it('writes an Amharic block then an English block, each with one heading and numbered verses', () => {
+    const result = formatVersesForCopy(book, 1, [3, 1], verses, english);
+    expect(result).toBe(
+      'ኦሪት ዘፍጥረት 1\n1.A1\n3.A3\n\nGenesis 1\n1.E1\n3.E3',
+    );
+  });
+
+  it('keeps chapter order regardless of selection order', () => {
+    const result = formatVersesForCopy(book, 1, [4, 2], verses, english);
+    expect(result.indexOf('2.A2')).toBeLessThan(result.indexOf('4.A4'));
   });
 
   it('returns an empty string when nothing is selected', () => {
-    expect(formatVersesForCopy(book, 1, [], verses, english, getVerseLabel)).toBe('');
+    expect(formatVersesForCopy(book, 1, [], verses, english)).toBe('');
   });
 
-  it('skips verses that are empty in both translations', () => {
-    const result = formatVersesForCopy(book, 1, [1, 2, 3], ['A1', '', ''], ['E1', '', ''], getVerseLabel);
-    expect(result).toContain('Genesis 1:1');
-    expect(result).not.toContain('Genesis 1:2');
-    expect(result).not.toContain('Genesis 1:3');
+  it('leaves out verses that are empty in a translation', () => {
+    const result = formatVersesForCopy(book, 1, [1, 2, 3], ['A1', '', ''], ['', 'E2', 'E3']);
+    expect(result).toBe('ኦሪት ዘፍጥረት 1\n1.A1\n\nGenesis 1\n2.E2\n3.E3');
+  });
+
+  it('omits the English block when no English verse is selected', () => {
+    const result = formatVersesForCopy(book, 1, [1], ['A1'], ['']);
+    expect(result).toBe('ኦሪት ዘፍጥረት 1\n1.A1');
   });
 });
